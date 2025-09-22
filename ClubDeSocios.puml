@@ -1,0 +1,64 @@
+@startuml
+title Diagrama de Clases Sistema de Incidencia
+
+class Sistema {
+    -usuarios: List<Usuario>
+    -incidencias: List<Incidencia>
+    -tiposDeIncidencia: List<TipoIncidencia>
+    -usuarioActual: Usuario
+
+    +registrarUsuario(...)
+    +iniciarSesion(login, clave): boolean
+    +cerrarSesion()
+    +actualizarDatosUsuario(usuario, ...)
+    +crearIncidencia(usuario, datos)
+    +listarIncidenciasDeUsuario(usuario): List<Incidencia>
+    +buscarIncidencias(tipo, estado): List<Incidencia>
+    +borrarIncidencia(usuario, incidencia): boolean
+    +modificarEstadoIncidencia(admin, incidencia, estado)
+    +añadirTipoIncidencia(admin, nombre, descripcion)
+    +borrarTipoIncidencia(admin, tipo): boolean
+}
+
+class Usuario {
+    -apellidos: String
+    -nombre: String
+    -fechaNacimiento: Date
+    -direccion: String
+    -telefono: String
+    -email: String
+    -login: String
+    -claveAcceso: String
+}
+
+class Administrador extends Usuario {
+}
+
+class Incidencia {
+    -fecha: DateTime
+    -descripcion: String
+    -localizacion: String
+    -localizacionGPS: String
+    -estado: EstadoIncidencia
+}
+
+class TipoIncidencia {
+    -nombre: String
+    -descripcion: String
+}
+
+enum EstadoIncidencia {
+    PENDIENTE
+    EN_EVALUACION
+    RESUELTA
+}
+
+Sistema "1" -- "0..*" Usuario : "gestiona"
+Sistema "1" -- "0..*" Incidencia : "gestiona"
+Sistema "1" -- "0..*" TipoIncidencia : "gestiona"
+
+Usuario "1" -- "0..*" Incidencia : "registra >"
+Incidencia "1" -- "1" TipoIncidencia : "es de tipo >"
+Incidencia "1" -- "1" EstadoIncidencia : "tiene un estado >"
+
+@enduml
