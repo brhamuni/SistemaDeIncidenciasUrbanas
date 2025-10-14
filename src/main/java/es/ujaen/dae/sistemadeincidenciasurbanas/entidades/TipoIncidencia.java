@@ -19,17 +19,12 @@ public class TipoIncidencia {
     @NotBlank(message = "La descripción не puede estar vacía")
     private String descripcion;
 
-    @OneToMany(mappedBy = "tipoIncidencia")
-    private List<Incidencia> incidencias;
-
     public TipoIncidencia() {
-        this.incidencias = new ArrayList<>();
     }
 
     public TipoIncidencia(String nombre, String descripcion) {
         this.nombre = nombre;
         this.descripcion = descripcion;
-        this.incidencias = new ArrayList<>();
     }
 
     public Long getId() {
@@ -54,14 +49,6 @@ public class TipoIncidencia {
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
-    }
-
-    public List<Incidencia> getIncidencias() {
-        return incidencias;
-    }
-
-    public void setIncidencias(List<Incidencia> incidencias) {
-        this.incidencias = incidencias;
     }
 
     @Override
