@@ -8,4 +8,5 @@ public interface RepositorioUsuarios extends JpaRepository<Usuario, Long> {
 
     Optional<Usuario> buscarPorLogin(String login);
     default void guardar(Usuario usuario) { save(usuario); }
+
 }
