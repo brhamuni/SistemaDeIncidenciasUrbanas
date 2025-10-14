@@ -1,18 +1,10 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.entidades;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 
-@Entity
+
 public class Usuario {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @NotBlank(message = "Los apellidos no pueden estar vacíos")
     private String apellidos;
@@ -39,10 +31,8 @@ public class Usuario {
     @NotBlank(message = "La clave de acceso no puede estar vacía")
     private String claveAcceso;
 
-    private List<Incidencia> incidencias;
 
     public Usuario() {
-        this.incidencias = new ArrayList<>();
     }
 
     public Usuario(String apellidos, String nombre, LocalDate fechaNacimiento, String direccion, String telefono, String email, String login, String claveAcceso) {
@@ -54,7 +44,6 @@ public class Usuario {
         this.email = email;
         this.login = login;
         this.claveAcceso = claveAcceso;
-        this.incidencias = new ArrayList<>();
     }
 
     public String getApellidos() {
@@ -121,24 +110,4 @@ public class Usuario {
         this.claveAcceso = claveAcceso;
     }
 
-    public List<Incidencia> getIncidencias() {
-        return incidencias;
-    }
-
-    public void setIncidencias(List<Incidencia> incidencias) {
-        this.incidencias = incidencias;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Usuario usuario = (Usuario) o;
-        return login.equals(usuario.login);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(login);
-    }
 }

@@ -1,37 +1,48 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.entidades;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-
-import java.util.Date;
+import java.time.LocalDateTime;
 
 public class Incidencia {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
-    private Date fecha;
+    private LocalDateTime fecha;
+
     @NotBlank(message = "La descripción no puede estar vacía")
     private String descripcion;
-    @NotBlank(message = "La localicación no puede estar vacía")
+
+    @NotBlank(message = "La localización no puede estar vacía")
     private String localizacion;
 
+    private String localizacionGPS;
+
     @NotNull
-    @Enumerated(EnumType.STRING)
     private EstadoIncidencia estadoIncidencia;
 
-    @ManyToOne(optional = false)
-    private  TipoIncidencia tipoIncidencia;
+    @NotNull
+    private Usuario usuario;
+
+    @NotNull
+    private TipoIncidencia tipoIncidencia;
 
     public Incidencia() {}
 
-    public String getLocalizacion() {
-        return localizacion;
+    public Incidencia(LocalDateTime fecha, String descripcion, String localizacion, String localizacionGPS, Usuario usuario, TipoIncidencia tipoIncidencia) {
+        this.fecha = fecha;
+        this.descripcion = descripcion;
+        this.localizacion = localizacion;
+        this.localizacionGPS = localizacionGPS;
+        this.usuario = usuario;
+        this.tipoIncidencia = tipoIncidencia;
+        this.estadoIncidencia = EstadoIncidencia.PENDIENTE;
     }
 
-    public void setLocalizacion(String localizacion) {
-        this.localizacion = localizacion;
+    public LocalDateTime getFecha() {
+        return fecha;
+    }
+
+    public void setFecha(LocalDateTime fecha) {
+        this.fecha = fecha;
     }
 
     public String getDescripcion() {
@@ -42,20 +53,20 @@ public class Incidencia {
         this.descripcion = descripcion;
     }
 
-    public Date getFecha() {
-        return fecha;
+    public String getLocalizacion() {
+        return localizacion;
     }
 
-    public void setFecha(Date fecha) {
-        this.fecha = fecha;
+    public void setLocalizacion(String localizacion) {
+        this.localizacion = localizacion;
     }
 
-    public TipoIncidencia getTipoIncidencia() {
-        return tipoIncidencia;
+    public String getLocalizacionGPS() {
+        return localizacionGPS;
     }
 
-    public void setTipoIncidencia(TipoIncidencia tipoIncidencia) {
-        this.tipoIncidencia = tipoIncidencia;
+    public void setLocalizacionGPS(String localizacionGPS) {
+        this.localizacionGPS = localizacionGPS;
     }
 
     public EstadoIncidencia getEstadoIncidencia() {
@@ -64,5 +75,21 @@ public class Incidencia {
 
     public void setEstadoIncidencia(EstadoIncidencia estadoIncidencia) {
         this.estadoIncidencia = estadoIncidencia;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
+
+    public TipoIncidencia getTipoIncidencia() {
+        return tipoIncidencia;
+    }
+
+    public void setTipoIncidencia(TipoIncidencia tipoIncidencia) {
+        this.tipoIncidencia = tipoIncidencia;
     }
 }

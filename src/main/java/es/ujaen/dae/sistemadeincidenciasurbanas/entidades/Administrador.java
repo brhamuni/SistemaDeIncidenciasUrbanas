@@ -1,11 +1,7 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.entidades;
 
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Entity;
 import java.time.LocalDate;
 
-@Entity
-@DiscriminatorValue("admin")
 public class Administrador extends Usuario {
 
     public Administrador() {
