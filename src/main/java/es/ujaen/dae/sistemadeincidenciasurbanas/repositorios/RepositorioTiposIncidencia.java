@@ -7,13 +7,9 @@ import java.util.Optional;
 
 public interface RepositorioTiposIncidencia extends JpaRepository<TipoIncidencia, Long> {
 
-    default void guardar(TipoIncidencia tipo) {
-        save(tipo);
-    }
+    default void guardar(TipoIncidencia tipo) { save(tipo);}
     Optional<TipoIncidencia> buscarPorId(Long id);
     List<TipoIncidencia> buscarTodos();
-    default void eliminar(TipoIncidencia tipo) {
-        delete(tipo);
-    }
+    default void eliminar(TipoIncidencia tipo) { delete(tipo); }
 
 }
