@@ -2,9 +2,13 @@ package es.ujaen.dae.sistemadeincidenciasurbanas.entidades;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 import java.time.LocalDateTime;
 
 public class Incidencia {
+    @Positive
+    private int id;
 
     private LocalDateTime fecha;
 
@@ -27,7 +31,8 @@ public class Incidencia {
 
     public Incidencia() {}
 
-    public Incidencia(LocalDateTime fecha, String descripcion, String localizacion, String localizacionGPS, Usuario usuario, TipoIncidencia tipoIncidencia) {
+    public Incidencia(int id, LocalDateTime fecha, String descripcion, String localizacion, String localizacionGPS, Usuario usuario, TipoIncidencia tipoIncidencia) {
+        this.id = id;
         this.fecha = fecha;
         this.descripcion = descripcion;
         this.localizacion = localizacion;
@@ -92,4 +97,8 @@ public class Incidencia {
     public void tipoIncidencia(TipoIncidencia tipoIncidencia) {
         this.tipoIncidencia = tipoIncidencia;
     }
+
+    public int id() {return id;}
+
+    public void id(int id) {this.id = id;}
 }
