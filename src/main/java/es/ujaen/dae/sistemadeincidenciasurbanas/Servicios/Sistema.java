@@ -3,6 +3,7 @@ package es.ujaen.dae.sistemadeincidenciasurbanas.Servicios;
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,18 @@ public class Sistema {
     private List<TipoIncidencia> tiposDeIncidencia;
     private Usuario usuarioActual;
     private static int nIncidencia = 1;
+
+    private static final Administrador administrador = new Administrador(
+            "del Sistema",
+            "Administrador",
+            LocalDate.of(2000, 1, 1),
+            "N/A",
+            "600000000",
+            "admin@sistema.com",
+            "admin",
+            "admin1234"
+    );
+
 
     public Sistema() {
         this.usuarios = new ArrayList<>();
@@ -121,13 +134,57 @@ public class Sistema {
         return lista_incidencias;
     }
 
-    public boolean borrarIncidencia(Usuario usuario, Incidencia incidencia) {
-        if(usuario.equals(usuarioActual) && incidencias.contains(incidencia)) {
+    public void borrarIncidencia(Usuario usuario, Incidencia incidencia) {
+        if (!incidencias.contains(incidencia)) {
+            throw new IncidenciaNoExiste();
+        }
+        if (esAdmin(usuario)) {
             incidencias.remove(incidencia);
+        }else{
+            if (!incidencia.usuario().equals(usuario)) {
+                throw new AccionNoAutorizada("No puedes borrar una incidencia que no es tuya");
+            }
+            if (incidencia.estadoIncidencia() != EstadoIncidencia.PENDIENTE) {
+                throw new AccionNoAutorizada("Solo puedes borrar incidencias pendientes");
+            }
+            incidencias.remove(incidencia);
+        }
+    }
+
+    public void modificarEstadoIncidencia(int idIncidencia, EstadoIncidencia estado) {
+
+        if (!esAdmin(usuarioActual)){
+            throw new UsuarioNoAdmin();
+        }
+
+        Incidencia cambio = incidencias.get(idIncidencia);
+        if (cambio == null){
+            throw new IncidenciaNoExiste();
+        }
+
+        cambio.estadoIncidencia(estado);
+    }
+
+    public void addTipoIncidencia(String nombre, String descripcion) {
+        if (!esAdmin(usuarioActual)){
+            throw new UsuarioNoAdmin();
+        }
+        TipoIncidencia nuevoTipo = new TipoIncidencia(nombre, descripcion);
+        tiposDeIncidencia.add(nuevoTipo);
+    }
+
+    public void borrarTipoIncidencia(TipoIncidencia tipoIncidencia) {
+        if (!esAdmin(usuarioActual)){
+            throw new UsuarioNoAdmin();
+        }
+        tiposDeIncidencia.remove(tipoIncidencia);
+    }
+
+    public boolean esAdmin(Usuario usuario) {
+        if(usuario.equals(administrador)) {
             return true;
         }
         return false;
     }
-
 
 }
