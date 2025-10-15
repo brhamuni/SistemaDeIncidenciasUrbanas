@@ -18,19 +18,19 @@ public class TipoIncidencia {
         this.descripcion = descripcion;
     }
 
-    public String getNombre() {
+    public String nombre() {
         return nombre;
     }
 
-    public void setNombre(String nombre) {
+    public void nombre(String nombre) {
         this.nombre = nombre;
     }
 
-    public String getDescripcion() {
+    public String descripcion() {
         return descripcion;
     }
 
-    public void setDescripcion(String descripcion) {
+    public void descripcion(String descripcion) {
         this.descripcion = descripcion;
     }
 }
