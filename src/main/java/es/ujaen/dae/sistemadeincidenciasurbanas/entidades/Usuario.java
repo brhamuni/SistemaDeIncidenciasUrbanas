@@ -46,67 +46,67 @@ public class Usuario {
         this.claveAcceso = claveAcceso;
     }
 
-    public String getApellidos() {
+    public String apellidos() {
         return apellidos;
     }
 
-    public void setApellidos(String apellidos) {
+    public void apellidos(String apellidos) {
         this.apellidos = apellidos;
     }
 
-    public String getNombre() {
+    public String nombre() {
         return nombre;
     }
 
-    public void setNombre(String nombre) {
+    public void nombre(String nombre) {
         this.nombre = nombre;
     }
 
-    public LocalDate getFechaNacimiento() {
+    public LocalDate fechaNacimiento() {
         return fechaNacimiento;
     }
 
-    public void setFechaNacimiento(LocalDate fechaNacimiento) {
+    public void fechaNacimiento(LocalDate fechaNacimiento) {
         this.fechaNacimiento = fechaNacimiento;
     }
 
-    public String getDireccion() {
+    public String direccion() {
         return direccion;
     }
 
-    public void setDireccion(String direccion) {
+    public void direccion(String direccion) {
         this.direccion = direccion;
     }
 
-    public String getTelefono() {
+    public String telefono() {
         return telefono;
     }
 
-    public void setTelefono(String telefono) {
+    public void telefono(String telefono) {
         this.telefono = telefono;
     }
 
-    public String getEmail() {
+    public String email() {
         return email;
     }
 
-    public void setEmail(String email) {
+    public void email(String email) {
         this.email = email;
     }
 
-    public String getLogin() {
+    public String login() {
         return login;
     }
 
-    public void setLogin(String login) {
+    public void login(String login) {
         this.login = login;
     }
 
-    public String getClaveAcceso() {
+    public String claveAcceso() {
         return claveAcceso;
     }
 
-    public void setClaveAcceso(String claveAcceso) {
+    public void claveAcceso(String claveAcceso) {
         this.claveAcceso = claveAcceso;
     }
 

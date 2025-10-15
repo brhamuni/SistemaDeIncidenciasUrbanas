@@ -37,59 +37,59 @@ public class Incidencia {
         this.estadoIncidencia = EstadoIncidencia.PENDIENTE;
     }
 
-    public LocalDateTime getFecha() {
+    public LocalDateTime fecha() {
         return fecha;
     }
 
-    public void setFecha(LocalDateTime fecha) {
+    public void fecha(LocalDateTime fecha) {
         this.fecha = fecha;
     }
 
-    public String getDescripcion() {
+    public String descripcion() {
         return descripcion;
     }
 
-    public void setDescripcion(String descripcion) {
+    public void descripcion(String descripcion) {
         this.descripcion = descripcion;
     }
 
-    public String getLocalizacion() {
+    public String localizacion() {
         return localizacion;
     }
 
-    public void setLocalizacion(String localizacion) {
+    public void localizacion(String localizacion) {
         this.localizacion = localizacion;
     }
 
-    public String getLocalizacionGPS() {
+    public String localizacionGPS() {
         return localizacionGPS;
     }
 
-    public void setLocalizacionGPS(String localizacionGPS) {
+    public void localizacionGPS(String localizacionGPS) {
         this.localizacionGPS = localizacionGPS;
     }
 
-    public EstadoIncidencia getEstadoIncidencia() {
+    public EstadoIncidencia estadoIncidencia() {
         return estadoIncidencia;
     }
 
-    public void setEstadoIncidencia(EstadoIncidencia estadoIncidencia) {
+    public void estadoIncidencia(EstadoIncidencia estadoIncidencia) {
         this.estadoIncidencia = estadoIncidencia;
     }
 
-    public Usuario getUsuario() {
+    public Usuario usuario() {
         return usuario;
     }
 
-    public void setUsuario(Usuario usuario) {
+    public void usuario(Usuario usuario) {
         this.usuario = usuario;
     }
 
-    public TipoIncidencia getTipoIncidencia() {
+    public TipoIncidencia tipoIncidencia() {
         return tipoIncidencia;
     }
 
-    public void setTipoIncidencia(TipoIncidencia tipoIncidencia) {
+    public void tipoIncidencia(TipoIncidencia tipoIncidencia) {
         this.tipoIncidencia = tipoIncidencia;
     }
 }
