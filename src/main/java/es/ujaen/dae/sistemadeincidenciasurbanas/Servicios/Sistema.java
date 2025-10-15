@@ -96,4 +96,38 @@ public class Sistema {
 
         incidencias.add(nuevaIncidencia);
     }
+
+    public List<Incidencia> listarIncidenciasDeUsuario(Usuario usuario) {
+        List<Incidencia> lista_incidencias = new ArrayList<>();
+
+        for (Incidencia incidencia : incidencias) {
+            if(incidencia.usuario().equals(usuario)) {
+                lista_incidencias.add(incidencia);
+            }
+        }
+
+        return lista_incidencias;
+    }
+
+    public List<Incidencia> buscarIncidencias(TipoIncidencia tipo, EstadoIncidencia estado){
+        List<Incidencia> lista_incidencias = new ArrayList<>();
+
+        for (Incidencia incidencia : incidencias) {
+            if(incidencia.estadoIncidencia().equals(estado) && incidencia.tipoIncidencia().equals(tipo)) {
+                lista_incidencias.add(incidencia);
+            }
+        }
+
+        return lista_incidencias;
+    }
+
+    public boolean borrarIncidencia(Usuario usuario, Incidencia incidencia) {
+        if(usuario.equals(usuarioActual) && incidencias.contains(incidencia)) {
+            incidencias.remove(incidencia);
+            return true;
+        }
+        return false;
+    }
+
+
 }
