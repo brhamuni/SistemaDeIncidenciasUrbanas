@@ -1,15 +1,18 @@
-package es.ujaen.dae.sistemadeincidenciasurbanas.Servicios;
+package es.ujaen.dae.sistemadeincidenciasurbanas.servicios;
 
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.*;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
+@Service
+@Validated
 public class Sistema {
 
     private List<Usuario> usuarios;
@@ -35,39 +38,7 @@ public class Sistema {
         this.incidencias = new ArrayList<>();
         this.tiposDeIncidencia = new ArrayList<>();
         this.usuarioActual = null;
-    }
-
-    // Getters y Setters
-    public List<Usuario> usuarios() {
-        return usuarios;
-    }
-
-    public List<Incidencia> incidencias() {
-        return incidencias;
-    }
-
-    public List<TipoIncidencia> tiposDeIncidencia() {
-        return tiposDeIncidencia;
-    }
-
-    public Usuario usuarioActual() {
-        return usuarioActual;
-    }
-
-    public void usuarios(List<Usuario> usuarios) {
-        this.usuarios = usuarios;
-    }
-
-    public void incidencias(List<Incidencia> incidencias) {
-        this.incidencias = incidencias;
-    }
-
-    public void tiposDeIncidencia(List<TipoIncidencia> tiposDeIncidencia) {
-        this.tiposDeIncidencia = tiposDeIncidencia;
-    }
-
-    public void usuarioActual(Usuario usuarioActual) {
-        this.usuarioActual = usuarioActual;
+        usuarios.add(administrador);
     }
 
     public void registrarUsuario(Usuario nuevoUsuario) {
@@ -153,18 +124,24 @@ public class Sistema {
 
     public void modificarEstadoIncidencia(int idIncidencia, EstadoIncidencia estado) {
 
-        if (!esAdmin(usuarioActual)){
+        if (usuarioActual == null || !esAdmin(usuarioActual)) {
             throw new UsuarioNoAdmin();
         }
 
-        Incidencia cambio = incidencias.get(idIncidencia);
-        if (cambio == null){
+        Incidencia cambio = null;
+        for (Incidencia incidencia : incidencias) {
+            if (incidencia.id() == idIncidencia) {
+                cambio = incidencia;
+                break;
+            }
+        }
+
+        if (cambio == null) {
             throw new IncidenciaNoExiste();
         }
 
         cambio.estadoIncidencia(estado);
     }
-
     public void addTipoIncidencia(String nombre, String descripcion) {
         if (!esAdmin(usuarioActual)){
             throw new UsuarioNoAdmin();
