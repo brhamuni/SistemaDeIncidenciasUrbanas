@@ -143,6 +143,11 @@ public class Sistema {
         cambio.estadoIncidencia(estado);
     }
     public void addTipoIncidencia(String nombre, String descripcion) {
+
+        if (usuarioActual == null){
+            throw new UsuarioNoLogeado();
+        }
+
         if (!esAdmin(usuarioActual)){
             throw new UsuarioNoAdmin();
         }
