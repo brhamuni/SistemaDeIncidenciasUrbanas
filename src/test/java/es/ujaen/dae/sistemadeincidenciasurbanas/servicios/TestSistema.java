@@ -21,6 +21,7 @@ class TestSistema {
 
         sistema.registrarUsuario(nuevoUsuario);
 
+        // Verificación: Comprobamos que el usuario esta correctamente creado
         assertTrue(sistema.iniciarSesion("usuariotest", "usuariotest1234"));
     }
 
@@ -30,6 +31,7 @@ class TestSistema {
         Usuario usuarioExistente = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuarioExistente);
 
+        // Verificación: Si el login esta duplicado debe recoger excepcion
         assertThrows(UsuarioYaExiste.class, () -> {
             Usuario usuarioDuplicado = new Usuario("Otro", "Usuario", LocalDate.now(), "Casa Otro Test", "611111111", "otro@test.com", "usuariotest", "otraclave1234");
             sistema.registrarUsuario(usuarioDuplicado);
@@ -44,6 +46,7 @@ class TestSistema {
 
         boolean exito = sistema.iniciarSesion("usuariotest", "usuariotest1234");
 
+        // Verificación: Si el login es correcto, exito debe de ser true
         assertTrue(exito);
     }
 
@@ -55,6 +58,7 @@ class TestSistema {
 
         boolean exito = sistema.iniciarSesion("usuariotest", "clave_erronea");
 
+        // Verificación: Si el login es incorrecto, exito debe de ser falso
         assertFalse(exito);
     }
 
