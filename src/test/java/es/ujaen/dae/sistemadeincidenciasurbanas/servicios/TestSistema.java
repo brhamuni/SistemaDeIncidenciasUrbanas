@@ -21,6 +21,7 @@ class TestSistema {
 
         sistema.registrarUsuario(nuevoUsuario);
 
+        // Verificación: Comprobamos que el usuario esta correctamente creado
         assertTrue(sistema.iniciarSesion("usuariotest", "usuariotest1234"));
     }
 
@@ -30,6 +31,7 @@ class TestSistema {
         Usuario usuarioExistente = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuarioExistente);
 
+        // Verificación: Si el login esta duplicado debe recoger excepcion
         assertThrows(UsuarioYaExiste.class, () -> {
             Usuario usuarioDuplicado = new Usuario("Otro", "Usuario", LocalDate.now(), "Casa Otro Test", "611111111", "otro@test.com", "usuariotest", "otraclave1234");
             sistema.registrarUsuario(usuarioDuplicado);
@@ -44,6 +46,7 @@ class TestSistema {
 
         boolean exito = sistema.iniciarSesion("usuariotest", "usuariotest1234");
 
+        // Verificación: Si el login es correcto, exito debe de ser true
         assertTrue(exito);
     }
 
@@ -55,6 +58,7 @@ class TestSistema {
 
         boolean exito = sistema.iniciarSesion("usuariotest", "clave_erronea");
 
+        // Verificación: Si el login es incorrecto, exito debe de ser falso
         assertFalse(exito);
     }
 
@@ -88,7 +92,7 @@ class TestSistema {
         // Verificación: Comprobamos que el usuario tiene una incidencia registrada.
         List<Incidencia> incidenciasUsuario = sistema.listarIncidenciasDeUsuario(usuario);
         assertEquals(1, incidenciasUsuario.size());
-        Incidencia creada = incidenciasUsuario.get(0);
+        Incidencia creada = incidenciasUsuario.getFirst();
         assertEquals("Contenedor roto", creada.descripcion());
     }
 
@@ -103,7 +107,7 @@ class TestSistema {
         sistema.cerrarSesion();
 
         sistema.crearIncidencia(LocalDateTime.now(), "Varios", "Test de borrado", "Calle Test", "", usuario, tipo);
-        Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuario).get(0);
+        Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuario).getFirst();
 
         assertDoesNotThrow(() -> sistema.borrarIncidencia(usuario, incidencia));
         // Verificación: La lista de incidencias del usuario debe estar vacía.
@@ -124,7 +128,7 @@ class TestSistema {
         sistema.cerrarSesion();
 
         sistema.crearIncidencia(LocalDateTime.now(), "Mobiliario", "Incidencia de User2", "Plaza Central", "", usuarioNormal2, tipo);
-        Incidencia incidenciaDeOtro = sistema.listarIncidenciasDeUsuario(usuarioNormal2).get(0);
+        Incidencia incidenciaDeOtro = sistema.listarIncidenciasDeUsuario(usuarioNormal2).getFirst();
 
         assertThrows(AccionNoAutorizada.class, () -> sistema.borrarIncidencia(usuarioNormal1, incidenciaDeOtro));
     }
@@ -151,7 +155,7 @@ class TestSistema {
         sistema.cerrarSesion();
 
         sistema.crearIncidencia(LocalDateTime.now(), "Limpieza", "Incidencia de Juan", "Test", "", usuario, tipo);
-        Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuario).get(0);
+        Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuario).getFirst();
         incidencia.estadoIncidencia(EstadoIncidencia.RESUELTA);
 
         assertDoesNotThrow(() -> sistema.borrarIncidencia(admin, incidencia));
@@ -169,7 +173,7 @@ class TestSistema {
         sistema.addTipoIncidencia(tipo.nombre(), tipo.descripcion());
 
         sistema.crearIncidencia(LocalDateTime.now(), "Limpieza", "Test", "Test", "", usuario, tipo);
-        Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuario).get(0);
+        Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuario).getFirst();
         int idIncidencia = incidencia.id();
 
         sistema.modificarEstadoIncidencia(idIncidencia, EstadoIncidencia.RESUELTA);
@@ -177,6 +181,6 @@ class TestSistema {
         // Verificación: Buscamos incidencias resueltas y comprobamos que está ahí.
         List<Incidencia> incidenciasResueltas = sistema.buscarIncidencias(tipo, EstadoIncidencia.RESUELTA);
         assertEquals(1, incidenciasResueltas.size());
-        assertEquals(idIncidencia, incidenciasResueltas.get(0).id());
+        assertEquals(idIncidencia, incidenciasResueltas.getFirst().id());
     }
 }
