@@ -2,6 +2,7 @@ package es.ujaen.dae.sistemadeincidenciasurbanas.servicios;
 
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.*;
+import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -87,7 +88,7 @@ class TestSistema {
         sistema.addTipoIncidencia(tipo.nombre(), tipo.descripcion());
         sistema.cerrarSesion();
 
-        sistema.crearIncidencia(LocalDateTime.now(), "Limpieza", "Contenedor roto", "Calle Mayor", "", usuario, tipo);
+        sistema.crearIncidencia(LocalDateTime.now(), "Limpieza", "Contenedor roto", "Calle Mayor", new LocalizacionGPS(10,10), usuario, tipo);
 
         // Verificación: Comprobamos que el usuario tiene una incidencia registrada.
         List<Incidencia> incidenciasUsuario = sistema.listarIncidenciasDeUsuario(usuario);
@@ -106,7 +107,7 @@ class TestSistema {
         sistema.addTipoIncidencia(tipo.nombre(), tipo.descripcion());
         sistema.cerrarSesion();
 
-        sistema.crearIncidencia(LocalDateTime.now(), "Varios", "Test de borrado", "Calle Test", "", usuario, tipo);
+        sistema.crearIncidencia(LocalDateTime.now(), "Varios", "Test de borrado", "Calle Test", new LocalizacionGPS(10,10), usuario, tipo);
         Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuario).getFirst();
 
         assertDoesNotThrow(() -> sistema.borrarIncidencia(usuario, incidencia));
@@ -127,7 +128,7 @@ class TestSistema {
         sistema.addTipoIncidencia(tipo.nombre(), tipo.descripcion());
         sistema.cerrarSesion();
 
-        sistema.crearIncidencia(LocalDateTime.now(), "Mobiliario", "Incidencia de User2", "Plaza Central", "", usuarioNormal2, tipo);
+        sistema.crearIncidencia(LocalDateTime.now(), "Mobiliario", "Incidencia de User2", "Plaza Central",  new LocalizacionGPS(10,10), usuarioNormal2, tipo);
         Incidencia incidenciaDeOtro = sistema.listarIncidenciasDeUsuario(usuarioNormal2).getFirst();
 
         assertThrows(AccionNoAutorizada.class, () -> sistema.borrarIncidencia(usuarioNormal1, incidenciaDeOtro));
@@ -154,7 +155,7 @@ class TestSistema {
         sistema.addTipoIncidencia(tipo.nombre(), tipo.descripcion());
         sistema.cerrarSesion();
 
-        sistema.crearIncidencia(LocalDateTime.now(), "Limpieza", "Incidencia de Juan", "Test", "", usuario, tipo);
+        sistema.crearIncidencia(LocalDateTime.now(), "Limpieza", "Incidencia de Juan", "Test",  new LocalizacionGPS(10,10), usuario, tipo);
         Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuario).getFirst();
         incidencia.estadoIncidencia(EstadoIncidencia.RESUELTA);
 
@@ -172,7 +173,7 @@ class TestSistema {
         sistema.iniciarSesion("admin", "admin1234");
         sistema.addTipoIncidencia(tipo.nombre(), tipo.descripcion());
 
-        sistema.crearIncidencia(LocalDateTime.now(), "Limpieza", "Test", "Test", "", usuario, tipo);
+        sistema.crearIncidencia(LocalDateTime.now(), "Limpieza", "Test", "Test",  new LocalizacionGPS(10,10), usuario, tipo);
         Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuario).getFirst();
         int idIncidencia = incidencia.id();
 

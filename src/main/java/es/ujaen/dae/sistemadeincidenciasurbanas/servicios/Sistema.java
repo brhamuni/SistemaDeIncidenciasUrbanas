@@ -2,6 +2,7 @@ package es.ujaen.dae.sistemadeincidenciasurbanas.servicios;
 
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.*;
+import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -71,7 +72,7 @@ public class Sistema {
         usuario.direccion(direccion);
     }
 
-    public void crearIncidencia(LocalDateTime fecha, String tipo, String descripcion, String localizacion, String localizacionGPS, Usuario usuario, TipoIncidencia tipoIncidencia) {
+    public void crearIncidencia(LocalDateTime fecha, String tipo, String descripcion, String localizacion, LocalizacionGPS localizacionGPS, Usuario usuario, TipoIncidencia tipoIncidencia) {
         Incidencia nuevaIncidencia = new Incidencia(nIncidencia++, fecha, descripcion, localizacion, localizacionGPS, usuario, tipoIncidencia);
 
         if (incidencias.contains(nuevaIncidencia)) {

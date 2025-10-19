@@ -1,5 +1,6 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.entidades;
 
+import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -18,7 +19,7 @@ public class Incidencia {
     @NotBlank(message = "La localización no puede estar vacía")
     private String localizacion;
 
-    private String localizacionGPS;
+    private LocalizacionGPS localizacionGPS;
 
     @NotNull
     private EstadoIncidencia estadoIncidencia;
@@ -31,7 +32,7 @@ public class Incidencia {
 
     public Incidencia() {}
 
-    public Incidencia(int id, LocalDateTime fecha, String descripcion, String localizacion, String localizacionGPS, Usuario usuario, TipoIncidencia tipoIncidencia) {
+    public Incidencia(int id, LocalDateTime fecha, String descripcion, String localizacion, LocalizacionGPS localizacionGPS, Usuario usuario, TipoIncidencia tipoIncidencia) {
         this.id = id;
         this.fecha = fecha;
         this.descripcion = descripcion;
@@ -66,11 +67,11 @@ public class Incidencia {
         this.localizacion = localizacion;
     }
 
-    public String localizacionGPS() {
+    public LocalizacionGPS localizacionGPS() {
         return localizacionGPS;
     }
 
-    public void localizacionGPS(String localizacionGPS) {
+    public void localizacionGPS(LocalizacionGPS localizacionGPS) {
         this.localizacionGPS = localizacionGPS;
     }
 
