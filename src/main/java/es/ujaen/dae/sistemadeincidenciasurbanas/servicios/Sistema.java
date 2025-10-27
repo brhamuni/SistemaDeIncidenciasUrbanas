@@ -123,9 +123,13 @@ public class Sistema {
         }
     }
 
-    public void modificarEstadoIncidencia(int idIncidencia, EstadoIncidencia estado) {
+    public void modificarEstadoIncidencia(int idIncidencia, EstadoIncidencia estado, Usuario usuarioLogeado) {
 
-        if (usuarioActual == null || !esAdmin(usuarioActual)) {
+        if (usuarioLogeado == null) {
+            throw new UsuarioNoLogeado();
+        }
+
+        if (!esAdmin(usuarioLogeado)) {
             throw new UsuarioNoAdmin();
         }
 
@@ -143,13 +147,13 @@ public class Sistema {
 
         cambio.estadoIncidencia(estado);
     }
-    public void addTipoIncidencia(String nombre, String descripcion) {
+    public void addTipoIncidencia(String nombre, String descripcion, Usuario usuarioLogeado) {
 
         if (usuarioActual == null){
             throw new UsuarioNoLogeado();
         }
 
-        if (!esAdmin(usuarioActual)){
+        if (!esAdmin(usuarioLogeado)){
             throw new UsuarioNoAdmin();
         }
         TipoIncidencia nuevoTipo = new TipoIncidencia(nombre, descripcion);
