@@ -19,10 +19,7 @@ class TestSistema {
     void registrarUsuarioExitosamente() {
         Sistema sistema = new Sistema();
         Usuario nuevoUsuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
-
         sistema.registrarUsuario(nuevoUsuario);
-
-        // Verificación: Comprobamos que el usuario esta correctamente creado
         assertTrue(sistema.iniciarSesion("usuariotest", "usuariotest1234"));
     }
 
@@ -32,7 +29,6 @@ class TestSistema {
         Usuario usuarioExistente = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuarioExistente);
 
-        // Verificación: Si el login esta duplicado debe recoger excepcion
         assertThrows(UsuarioYaExiste.class, () -> {
             Usuario usuarioDuplicado = new Usuario("Otro", "Usuario", LocalDate.now(), "Casa Otro Test", "611111111", "otro@test.com", "usuariotest", "otraclave1234");
             sistema.registrarUsuario(usuarioDuplicado);
@@ -44,10 +40,7 @@ class TestSistema {
         Sistema sistema = new Sistema();
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuario);
-
         boolean exito = sistema.iniciarSesion("usuariotest", "usuariotest1234");
-
-        // Verificación: Si el login es correcto, exito debe de ser true
         assertTrue(exito);
     }
 
@@ -56,10 +49,7 @@ class TestSistema {
         Sistema sistema = new Sistema();
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuario);
-
         boolean exito = sistema.iniciarSesion("usuariotest", "clave_erronea");
-
-        // Verificación: Si el login es incorrecto, exito debe de ser falso
         assertFalse(exito);
     }
 
@@ -72,9 +62,10 @@ class TestSistema {
 
         // Verificación: Si la sesión se ha cerrado, una acción de admin debe fallar.
         assertThrows(UsuarioNoLogeado.class, () -> {
-            sistema.addTipoIncidencia("Test", "Test");
+            sistema.addTipoIncidencia(new TipoIncidencia("Test", "Test"), null);
         });
     }
+
 
     @Test
     void crearIncidenciaCorrectamente() {
@@ -83,14 +74,21 @@ class TestSistema {
         TipoIncidencia tipo = new TipoIncidencia("Limpieza", "Suciedad en la vía pública");
         sistema.registrarUsuario(usuario);
 
-        // Para añadir un tipo, hay que ser admin
+        Usuario admin = new Administrador("del Sistema", "Admin", LocalDate.now(), "N/A", "600000000", "admin@sistema.com", "admin", "admin1234");
+
         sistema.iniciarSesion("admin", "admin1234");
-        sistema.addTipoIncidencia(tipo.nombre(), tipo.descripcion());
+        sistema.addTipoIncidencia(tipo, admin);
         sistema.cerrarSesion();
+        sistema.iniciarSesion("usuariotest", "usuariotest1234");
 
-        sistema.crearIncidencia(LocalDateTime.now(), "Limpieza", "Contenedor roto", "Calle Mayor", new LocalizacionGPS(10,10), usuario, tipo);
+        Incidencia nuevaIncidencia = new Incidencia();
+        nuevaIncidencia.descripcion("Contenedor roto");
+        nuevaIncidencia.localizacion("Calle Mayor");
+        nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
+        nuevaIncidencia.tipoIncidencia(tipo);
 
-        // Verificación: Comprobamos que el usuario tiene una incidencia registrada.
+        sistema.crearIncidencia(nuevaIncidencia);
+
         List<Incidencia> incidenciasUsuario = sistema.listarIncidenciasDeUsuario(usuario);
         assertEquals(1, incidenciasUsuario.size());
         Incidencia creada = incidenciasUsuario.getFirst();
@@ -103,15 +101,23 @@ class TestSistema {
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         TipoIncidencia tipo = new TipoIncidencia("Varios", "Incidencias varias");
         sistema.registrarUsuario(usuario);
-        sistema.iniciarSesion("admin", "admin1234");
-        sistema.addTipoIncidencia(tipo.nombre(), tipo.descripcion());
-        sistema.cerrarSesion();
 
-        sistema.crearIncidencia(LocalDateTime.now(), "Varios", "Test de borrado", "Calle Test", new LocalizacionGPS(10,10), usuario, tipo);
+        Usuario admin = new Administrador("del Sistema", "Admin", LocalDate.now(), "N/A", "600000000", "admin@sistema.com", "admin", "admin1234");
+
+        sistema.iniciarSesion("admin", "admin1234");
+        sistema.addTipoIncidencia(tipo, admin);
+        sistema.cerrarSesion();
+        sistema.iniciarSesion("usuariotest", "usuariotest1234");
+        Incidencia nuevaIncidencia = new Incidencia();
+        nuevaIncidencia.descripcion("Test de borrado");
+        nuevaIncidencia.localizacion("Calle Test");
+        nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
+        nuevaIncidencia.tipoIncidencia(tipo);
+        sistema.crearIncidencia(nuevaIncidencia);
+
         Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuario).getFirst();
 
         assertDoesNotThrow(() -> sistema.borrarIncidencia(usuario, incidencia));
-        // Verificación: La lista de incidencias del usuario debe estar vacía.
         assertTrue(sistema.listarIncidenciasDeUsuario(usuario).isEmpty());
     }
 
@@ -124,11 +130,20 @@ class TestSistema {
         sistema.registrarUsuario(usuarioNormal1);
         sistema.registrarUsuario(usuarioNormal2);
 
+        Usuario admin = new Administrador("del Sistema", "Admin", LocalDate.now(), "N/A", "600000000", "admin@sistema.com", "admin", "admin1234");
+
         sistema.iniciarSesion("admin", "admin1234");
-        sistema.addTipoIncidencia(tipo.nombre(), tipo.descripcion());
+        sistema.addTipoIncidencia(tipo, admin);
         sistema.cerrarSesion();
 
-        sistema.crearIncidencia(LocalDateTime.now(), "Mobiliario", "Incidencia de User2", "Plaza Central",  new LocalizacionGPS(10,10), usuarioNormal2, tipo);
+        sistema.iniciarSesion("user2", "user2pass");
+        Incidencia nuevaIncidencia = new Incidencia();
+        nuevaIncidencia.descripcion("Incidencia de User2");
+        nuevaIncidencia.localizacion("Plaza Central");
+        nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
+        nuevaIncidencia.tipoIncidencia(tipo);
+        sistema.crearIncidencia(nuevaIncidencia);
+
         Incidencia incidenciaDeOtro = sistema.listarIncidenciasDeUsuario(usuarioNormal2).getFirst();
 
         assertThrows(AccionNoAutorizada.class, () -> sistema.borrarIncidencia(usuarioNormal1, incidenciaDeOtro));
@@ -137,25 +152,25 @@ class TestSistema {
     @Test
     void administradorPuedeBorrarCualquierIncidencia() {
         Sistema sistema = new Sistema();
-        Administrador admin = new Administrador(
-                "del Sistema",
-                "Administrador",
-                LocalDate.of(2000, 1, 1),
-                "N/A",
-                "600000000",
-                "admin@sistema.com",
-                "admin",
-                "admin1234"
-        );
+
+        Usuario admin = new Administrador("del Sistema", "Administrador", LocalDate.of(2000, 1, 1), "N/A", "600000000", "admin@sistema.com", "admin", "admin1234");
+
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         TipoIncidencia tipo = new TipoIncidencia("Limpieza", "Suciedad");
         sistema.registrarUsuario(usuario);
 
         sistema.iniciarSesion("admin", "admin1234");
-        sistema.addTipoIncidencia(tipo.nombre(), tipo.descripcion());
+        sistema.addTipoIncidencia(tipo, admin);
         sistema.cerrarSesion();
 
-        sistema.crearIncidencia(LocalDateTime.now(), "Limpieza", "Incidencia de Juan", "Test",  new LocalizacionGPS(10,10), usuario, tipo);
+        sistema.iniciarSesion("usuariotest", "usuariotest1234");
+        Incidencia nuevaIncidencia = new Incidencia();
+        nuevaIncidencia.descripcion("Incidencia de Juan");
+        nuevaIncidencia.localizacion("Test");
+        nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
+        nuevaIncidencia.tipoIncidencia(tipo);
+        sistema.crearIncidencia(nuevaIncidencia);
+
         Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuario).getFirst();
         incidencia.estadoIncidencia(EstadoIncidencia.RESUELTA);
 
@@ -170,16 +185,31 @@ class TestSistema {
         TipoIncidencia tipo = new TipoIncidencia("Limpieza", "Suciedad");
         sistema.registrarUsuario(usuario);
 
-        sistema.iniciarSesion("admin", "admin1234");
-        sistema.addTipoIncidencia(tipo.nombre(), tipo.descripcion());
+        Usuario admin = new Administrador("del Sistema", "Administrador", LocalDate.of(2000, 1, 1), "N/A", "600000000", "admin@sistema.com", "admin", "admin1234");
 
-        sistema.crearIncidencia(LocalDateTime.now(), "Limpieza", "Test", "Test",  new LocalizacionGPS(10,10), usuario, tipo);
+        sistema.iniciarSesion("admin", "admin1234");
+        sistema.addTipoIncidencia(tipo, admin);
+        sistema.cerrarSesion();
+
+        sistema.iniciarSesion("usuariotest", "usuariotest1234");
+        Incidencia nuevaIncidencia = new Incidencia();
+        nuevaIncidencia.descripcion("Test");
+        nuevaIncidencia.localizacion("Test");
+        nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
+        nuevaIncidencia.tipoIncidencia(tipo);
+        sistema.crearIncidencia(nuevaIncidencia);
+
         Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuario).getFirst();
         int idIncidencia = incidencia.id();
 
-        sistema.modificarEstadoIncidencia(idIncidencia, EstadoIncidencia.RESUELTA);
+        sistema.iniciarSesion("admin", "admin1234");
 
-        // Verificación: Buscamos incidencias resueltas y comprobamos que está ahí.
+        Incidencia paraModificar = new Incidencia();
+        paraModificar.id(idIncidencia);
+        paraModificar.estadoIncidencia(EstadoIncidencia.RESUELTA);
+
+        sistema.modificarEstadoIncidencia(paraModificar, admin);
+
         List<Incidencia> incidenciasResueltas = sistema.buscarIncidencias(tipo, EstadoIncidencia.RESUELTA);
         assertEquals(1, incidenciasResueltas.size());
         assertEquals(idIncidencia, incidenciasResueltas.getFirst().id());
