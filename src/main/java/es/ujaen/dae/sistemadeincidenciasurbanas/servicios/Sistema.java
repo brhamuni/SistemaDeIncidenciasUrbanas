@@ -43,7 +43,7 @@ public class Sistema {
     }
 
     public void registrarUsuario(Usuario nuevoUsuario) {
-        Optional<Usuario> existente = usuarios.stream().filter(u -> u.login().equalsIgnoreCase(nuevoUsuario.login())).findFirst();
+        Optional<Usuario> existente = usuarios.stream().filter(u -> u.equals(nuevoUsuario)).findFirst();
         if (existente.isPresent()) {
             throw new UsuarioYaExiste();
         }
@@ -64,16 +64,28 @@ public class Sistema {
         usuarioActual = null;
     }
 
-    public void actualizarDatosUsuario(Usuario usuario, String nombre, String apellidos, String email, String telefono, String direccion) {
-        usuario.nombre(nombre);
-        usuario.apellidos(apellidos);
-        usuario.email(email);
-        usuario.telefono(telefono);
-        usuario.direccion(direccion);
+    public void actualizarDatosUsuario(Usuario usuarioNuevo) {
+        Usuario usuarioOriginal = usuarios.stream()
+                .filter(u -> u.equals(usuarioNuevo))
+                .findFirst()
+                .orElseThrow(() -> new UsuarioNoEncontrado());
+
+        usuarioOriginal.nombre(usuarioNuevo.nombre());
+        usuarioOriginal.apellidos(usuarioNuevo.apellidos());
+        usuarioOriginal.email(usuarioNuevo.email());
+        usuarioOriginal.telefono(usuarioNuevo.telefono());
+        usuarioOriginal.direccion(usuarioNuevo.direccion());
     }
 
-    public void crearIncidencia(LocalDateTime fecha, String tipo, String descripcion, String localizacion, LocalizacionGPS localizacionGPS, Usuario usuario, TipoIncidencia tipoIncidencia) {
-        Incidencia nuevaIncidencia = new Incidencia(nIncidencia++, fecha, descripcion, localizacion, localizacionGPS, usuario, tipoIncidencia);
+    public void crearIncidencia(Incidencia nuevaIncidencia) {
+        if (usuarioActual == null) {
+            throw new UsuarioNoLogeado();
+        }
+
+        nuevaIncidencia.id(nIncidencia++);
+        nuevaIncidencia.fecha(LocalDateTime.now());
+        nuevaIncidencia.usuario(usuarioActual);
+        nuevaIncidencia.estadoIncidencia(EstadoIncidencia.PENDIENTE);
 
         if (incidencias.contains(nuevaIncidencia)) {
             throw new IncidenciaYaExiste();
@@ -123,40 +135,36 @@ public class Sistema {
         }
     }
 
-    public void modificarEstadoIncidencia(int idIncidencia, EstadoIncidencia estado, Usuario usuarioLogeado) {
-
+    public void modificarEstadoIncidencia(Incidencia incidenciaNuevoEstado, Usuario usuarioLogeado) {
         if (usuarioLogeado == null) {
             throw new UsuarioNoLogeado();
         }
-
         if (!esAdmin(usuarioLogeado)) {
             throw new UsuarioNoAdmin();
         }
 
-        Incidencia cambio = null;
-        for (Incidencia incidencia : incidencias) {
-            if (incidencia.id() == idIncidencia) {
-                cambio = incidencia;
-                break;
-            }
-        }
+        Incidencia incidenciaOriginal = incidencias.stream()
+                .filter(i -> i.id() == incidenciaNuevoEstado.id())
+                .findFirst()
+                .orElseThrow(() -> new IncidenciaNoExiste());
 
-        if (cambio == null) {
-            throw new IncidenciaNoExiste();
-        }
-
-        cambio.estadoIncidencia(estado);
+        incidenciaOriginal.estadoIncidencia(incidenciaNuevoEstado.estadoIncidencia());
     }
-    public void addTipoIncidencia(String nombre, String descripcion, Usuario usuarioLogeado) {
 
-        if (usuarioActual == null){
+    public void addTipoIncidencia(TipoIncidencia nuevoTipo, Usuario usuarioLogeado) {
+        if (usuarioLogeado == null){
             throw new UsuarioNoLogeado();
         }
-
         if (!esAdmin(usuarioLogeado)){
             throw new UsuarioNoAdmin();
         }
-        TipoIncidencia nuevoTipo = new TipoIncidencia(nombre, descripcion);
+
+        boolean yaExiste = tiposDeIncidencia.stream()
+                .anyMatch(t -> t.nombre().equalsIgnoreCase(nuevoTipo.nombre()));
+        if (yaExiste) {
+            throw new TipoIncidenciaYaExiste(); // Deberías crear esta excepción
+        }
+
         tiposDeIncidencia.add(nuevoTipo);
     }
 
