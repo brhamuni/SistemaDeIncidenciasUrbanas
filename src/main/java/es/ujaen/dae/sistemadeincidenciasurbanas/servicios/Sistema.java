@@ -184,4 +184,8 @@ public class Sistema {
         return false;
     }
 
+    public List<TipoIncidencia> listarTiposDeIncidencia() {
+        return new ArrayList<>(tiposDeIncidencia);
+    }
+
 }

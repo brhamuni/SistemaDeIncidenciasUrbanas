@@ -71,15 +71,17 @@ class TestSistema {
     void crearIncidenciaCorrectamente() {
         Sistema sistema = new Sistema();
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
-        TipoIncidencia tipo = new TipoIncidencia("Limpieza", "Suciedad en la vía pública");
         sistema.registrarUsuario(usuario);
 
         Usuario admin = new Administrador("del Sistema", "Admin", LocalDate.now(), "N/A", "600000000", "admin@sistema.com", "admin", "admin1234");
 
         sistema.iniciarSesion("admin", "admin1234");
-        sistema.addTipoIncidencia(tipo, admin);
-        sistema.cerrarSesion();
-        sistema.iniciarSesion("usuariotest", "usuariotest1234");
+        sistema.addTipoIncidencia(new TipoIncidencia("Limpieza", "Suciedad en la vía pública"), admin);
+
+        List<TipoIncidencia> tipos = sistema.listarTiposDeIncidencia();
+        TipoIncidencia tipo = tipos.getFirst();
+
+        sistema.iniciarSesion("usuariotest", "usuariotest1234")
 
         Incidencia nuevaIncidencia = new Incidencia();
         nuevaIncidencia.descripcion("Contenedor roto");
@@ -99,15 +101,18 @@ class TestSistema {
     void usuarioNormalPuedeBorrarSuIncidenciaPendiente() {
         Sistema sistema = new Sistema();
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
-        TipoIncidencia tipo = new TipoIncidencia("Varios", "Incidencias varias");
         sistema.registrarUsuario(usuario);
 
         Usuario admin = new Administrador("del Sistema", "Admin", LocalDate.now(), "N/A", "600000000", "admin@sistema.com", "admin", "admin1234");
 
         sistema.iniciarSesion("admin", "admin1234");
-        sistema.addTipoIncidencia(tipo, admin);
-        sistema.cerrarSesion();
+        sistema.addTipoIncidencia(new TipoIncidencia("Varios", "Incidencias varias"), admin);
+
+        List<TipoIncidencia> tipos = sistema.listarTiposDeIncidencia();
+        TipoIncidencia tipo = tipos.getFirst();
+
         sistema.iniciarSesion("usuariotest", "usuariotest1234");
+
         Incidencia nuevaIncidencia = new Incidencia();
         nuevaIncidencia.descripcion("Test de borrado");
         nuevaIncidencia.localizacion("Calle Test");
@@ -133,8 +138,10 @@ class TestSistema {
         Usuario admin = new Administrador("del Sistema", "Admin", LocalDate.now(), "N/A", "600000000", "admin@sistema.com", "admin", "admin1234");
 
         sistema.iniciarSesion("admin", "admin1234");
-        sistema.addTipoIncidencia(tipo, admin);
-        sistema.cerrarSesion();
+        sistema.addTipoIncidencia(new TipoIncidencia("Mobiliario", "Mobiliario urbano dañado"), admin);
+
+        List<TipoIncidencia> tipos = sistema.listarTiposDeIncidencia();
+        TipoIncidencia tipo = tipos.getFirst();
 
         sistema.iniciarSesion("user2", "user2pass");
         Incidencia nuevaIncidencia = new Incidencia();
@@ -156,12 +163,13 @@ class TestSistema {
         Usuario admin = new Administrador("del Sistema", "Administrador", LocalDate.of(2000, 1, 1), "N/A", "600000000", "admin@sistema.com", "admin", "admin1234");
 
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
-        TipoIncidencia tipo = new TipoIncidencia("Limpieza", "Suciedad");
         sistema.registrarUsuario(usuario);
 
         sistema.iniciarSesion("admin", "admin1234");
-        sistema.addTipoIncidencia(tipo, admin);
-        sistema.cerrarSesion();
+        sistema.addTipoIncidencia(new TipoIncidencia("Limpieza", "Suciedad"), admin);
+
+        List<TipoIncidencia> tipos = sistema.listarTiposDeIncidencia();
+        TipoIncidencia tipo = tipos.getFirst();
 
         sistema.iniciarSesion("usuariotest", "usuariotest1234");
         Incidencia nuevaIncidencia = new Incidencia();
@@ -182,14 +190,15 @@ class TestSistema {
     void administradorPuedeCambiarEstadoIncidencia() {
         Sistema sistema = new Sistema();
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
-        TipoIncidencia tipo = new TipoIncidencia("Limpieza", "Suciedad");
         sistema.registrarUsuario(usuario);
 
         Usuario admin = new Administrador("del Sistema", "Administrador", LocalDate.of(2000, 1, 1), "N/A", "600000000", "admin@sistema.com", "admin", "admin1234");
 
         sistema.iniciarSesion("admin", "admin1234");
-        sistema.addTipoIncidencia(tipo, admin);
-        sistema.cerrarSesion();
+        sistema.addTipoIncidencia(new TipoIncidencia("Limpieza", "Suciedad"), admin);
+
+        List<TipoIncidencia> tipos = sistema.listarTiposDeIncidencia();
+        TipoIncidencia tipo = tipos.getFirst();
 
         sistema.iniciarSesion("usuariotest", "usuariotest1234");
         Incidencia nuevaIncidencia = new Incidencia();
