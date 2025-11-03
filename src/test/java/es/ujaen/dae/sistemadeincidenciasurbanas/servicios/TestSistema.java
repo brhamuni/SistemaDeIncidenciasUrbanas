@@ -4,6 +4,7 @@ import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.AutoWired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDate;
@@ -15,9 +16,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 class TestSistema {
 
+    @AutoWired
+    private Sistema sistema;
+
     @Test
     void registrarUsuarioExitosamente() {
-        Sistema sistema = new Sistema();
         Usuario nuevoUsuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(nuevoUsuario);
         assertTrue(sistema.iniciarSesion("usuariotest", "usuariotest1234"));
@@ -25,7 +28,6 @@ class TestSistema {
 
     @Test
     void registrarUsuarioLanzaExcepcionSiLoginDuplicado() {
-        Sistema sistema = new Sistema();
         Usuario usuarioExistente = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuarioExistente);
 
@@ -37,7 +39,6 @@ class TestSistema {
 
     @Test
     void iniciarSesionCorrecto() {
-        Sistema sistema = new Sistema();
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuario);
         boolean exito = sistema.iniciarSesion("usuariotest", "usuariotest1234");
@@ -46,7 +47,6 @@ class TestSistema {
 
     @Test
     void iniciarSesionIncorrecto() {
-        Sistema sistema = new Sistema();
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuario);
         boolean exito = sistema.iniciarSesion("usuariotest", "clave_erronea");
@@ -55,7 +55,6 @@ class TestSistema {
 
     @Test
     void cerrarSesionLimpiaUsuarioActual() {
-        Sistema sistema = new Sistema();
         sistema.iniciarSesion("admin", "admin1234");
 
         sistema.cerrarSesion();
@@ -69,7 +68,6 @@ class TestSistema {
 
     @Test
     void crearIncidenciaCorrectamente() {
-        Sistema sistema = new Sistema();
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuario);
 
@@ -99,7 +97,6 @@ class TestSistema {
 
     @Test
     void usuarioNormalPuedeBorrarSuIncidenciaPendiente() {
-        Sistema sistema = new Sistema();
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuario);
 
@@ -128,7 +125,6 @@ class TestSistema {
 
     @Test
     void usuarioNormalNoPuedeBorrarIncidenciaAjena() {
-        Sistema sistema = new Sistema();
         Usuario usuarioNormal1 = new Usuario("Test", "Usuario1", LocalDate.now(), "Casa 1", "611111111", "user1@test.com", "user1", "user1pass");
         Usuario usuarioNormal2 = new Usuario("Test", "Usuario2", LocalDate.now(), "Casa 2", "622222222", "user2@test.com", "user2", "user2pass");
         TipoIncidencia tipo = new TipoIncidencia("Mobiliario", "Mobiliario urbano dañado");
@@ -158,8 +154,6 @@ class TestSistema {
 
     @Test
     void administradorPuedeBorrarCualquierIncidencia() {
-        Sistema sistema = new Sistema();
-
         Usuario admin = new Administrador("del Sistema", "Administrador", LocalDate.of(2000, 1, 1), "N/A", "600000000", "admin@sistema.com", "admin", "admin1234");
 
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
@@ -188,7 +182,6 @@ class TestSistema {
 
     @Test
     void administradorPuedeCambiarEstadoIncidencia() {
-        Sistema sistema = new Sistema();
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuario);
 
