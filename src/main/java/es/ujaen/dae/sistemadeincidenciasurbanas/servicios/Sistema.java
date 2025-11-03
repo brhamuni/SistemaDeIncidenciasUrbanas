@@ -80,7 +80,7 @@ public class Sistema {
 
         nuevaIncidencia.id(nIncidencia++);
         nuevaIncidencia.fecha(LocalDateTime.now());
-        nuevaIncidencia.usuario(usuarioActual);
+        nuevaIncidencia.usuario(usuario);
         nuevaIncidencia.estadoIncidencia(EstadoIncidencia.PENDIENTE);
 
         if (incidencias.contains(nuevaIncidencia)) {

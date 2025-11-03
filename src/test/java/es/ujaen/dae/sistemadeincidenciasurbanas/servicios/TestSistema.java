@@ -4,7 +4,7 @@ import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.AutoWired;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDate;
@@ -16,14 +16,17 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 class TestSistema {
 
-    @AutoWired
+    @Autowired
     private Sistema sistema;
 
     @Test
     void registrarUsuarioExitosamente() {
         Usuario nuevoUsuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(nuevoUsuario);
-        assertTrue(sistema.iniciarSesion("usuariotest", "usuariotest1234"));
+        Usuario usuario = sistema.iniciarSesion("usuariotest", "usuariotest1234");
+        assertNotNull(usuario);
+        assertEquals("usuariotest", usuario.login());
+        assertEquals("usuariotest1234", usuario.claveAcceso());
     }
 
     @Test
@@ -41,27 +44,19 @@ class TestSistema {
     void iniciarSesionCorrecto() {
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuario);
-        boolean exito = sistema.iniciarSesion("usuariotest", "usuariotest1234");
-        assertTrue(exito);
+        Usuario usuarioIniciado = sistema.iniciarSesion("usuariotest", "usuariotest1234");
+
+        assertNotNull(usuarioIniciado);
+        assertEquals("usuariotest", usuarioIniciado.login());
+        assertEquals("usuariotest1234", usuarioIniciado.claveAcceso());
     }
 
     @Test
     void iniciarSesionIncorrecto() {
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.now(), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuario);
-        boolean exito = sistema.iniciarSesion("usuariotest", "clave_erronea");
-        assertFalse(exito);
-    }
-
-    @Test
-    void cerrarSesionLimpiaUsuarioActual() {
-        sistema.iniciarSesion("admin", "admin1234");
-
-        sistema.cerrarSesion();
-
-        // Verificación: Si la sesión se ha cerrado, una acción de admin debe fallar.
-        assertThrows(UsuarioNoLogeado.class, () -> {
-            sistema.addTipoIncidencia(new TipoIncidencia("Test", "Test"), null);
+        assertThrows(UsuarioNoEncontrado.class, () -> {
+            sistema.iniciarSesion("usuariotest", "claveErronea");
         });
     }
 
@@ -79,7 +74,7 @@ class TestSistema {
         List<TipoIncidencia> tipos = sistema.listarTiposDeIncidencia();
         TipoIncidencia tipo = tipos.getFirst();
 
-        sistema.iniciarSesion("usuariotest", "usuariotest1234")
+        sistema.iniciarSesion("usuariotest", "usuariotest1234");
 
         Incidencia nuevaIncidencia = new Incidencia();
         nuevaIncidencia.descripcion("Contenedor roto");
@@ -87,7 +82,7 @@ class TestSistema {
         nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
         nuevaIncidencia.tipoIncidencia(tipo);
 
-        sistema.crearIncidencia(nuevaIncidencia);
+        sistema.crearIncidencia(nuevaIncidencia, usuario);
 
         List<Incidencia> incidenciasUsuario = sistema.listarIncidenciasDeUsuario(usuario);
         assertEquals(1, incidenciasUsuario.size());
@@ -115,7 +110,7 @@ class TestSistema {
         nuevaIncidencia.localizacion("Calle Test");
         nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
         nuevaIncidencia.tipoIncidencia(tipo);
-        sistema.crearIncidencia(nuevaIncidencia);
+        sistema.crearIncidencia(nuevaIncidencia, usuario);
 
         Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuario).getFirst();
 
@@ -127,7 +122,6 @@ class TestSistema {
     void usuarioNormalNoPuedeBorrarIncidenciaAjena() {
         Usuario usuarioNormal1 = new Usuario("Test", "Usuario1", LocalDate.now(), "Casa 1", "611111111", "user1@test.com", "user1", "user1pass");
         Usuario usuarioNormal2 = new Usuario("Test", "Usuario2", LocalDate.now(), "Casa 2", "622222222", "user2@test.com", "user2", "user2pass");
-        TipoIncidencia tipo = new TipoIncidencia("Mobiliario", "Mobiliario urbano dañado");
         sistema.registrarUsuario(usuarioNormal1);
         sistema.registrarUsuario(usuarioNormal2);
 
@@ -145,7 +139,7 @@ class TestSistema {
         nuevaIncidencia.localizacion("Plaza Central");
         nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
         nuevaIncidencia.tipoIncidencia(tipo);
-        sistema.crearIncidencia(nuevaIncidencia);
+        sistema.crearIncidencia(nuevaIncidencia, usuarioNormal2);
 
         Incidencia incidenciaDeOtro = sistema.listarIncidenciasDeUsuario(usuarioNormal2).getFirst();
 
@@ -171,7 +165,7 @@ class TestSistema {
         nuevaIncidencia.localizacion("Test");
         nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
         nuevaIncidencia.tipoIncidencia(tipo);
-        sistema.crearIncidencia(nuevaIncidencia);
+        sistema.crearIncidencia(nuevaIncidencia, usuario);
 
         Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuario).getFirst();
         incidencia.estadoIncidencia(EstadoIncidencia.RESUELTA);
@@ -199,7 +193,7 @@ class TestSistema {
         nuevaIncidencia.localizacion("Test");
         nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
         nuevaIncidencia.tipoIncidencia(tipo);
-        sistema.crearIncidencia(nuevaIncidencia);
+        sistema.crearIncidencia(nuevaIncidencia, usuario);
 
         Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuario).getFirst();
         int idIncidencia = incidencia.id();
