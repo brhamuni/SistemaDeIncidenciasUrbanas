@@ -6,6 +6,9 @@ import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -42,7 +45,7 @@ public class Sistema {
         usuarios.add(administrador);
     }
 
-    public void registrarUsuario(Usuario nuevoUsuario) {
+    public void registrarUsuario(@Valid Usuario nuevoUsuario) {
         Optional<Usuario> existente = usuarios.stream().filter(u -> u.equals(nuevoUsuario)).findFirst();
         if (existente.isPresent()) {
             throw new UsuarioYaExiste();
@@ -50,7 +53,7 @@ public class Sistema {
         usuarios.add(nuevoUsuario);
     }
 
-    public boolean iniciarSesion(String login, String clave) {
+    public boolean iniciarSesion(@NotNull String login, @NotNull String clave) {
         for (Usuario u : usuarios) {
             if (u.login().equals(login) && u.claveAcceso().equals(clave)) {
                 usuarioActual = u;
@@ -64,7 +67,7 @@ public class Sistema {
         usuarioActual = null;
     }
 
-    public void actualizarDatosUsuario(Usuario usuarioNuevo) {
+    public void actualizarDatosUsuario(@Valid Usuario usuarioNuevo) {
         Usuario usuarioOriginal = usuarios.stream()
                 .filter(u -> u.equals(usuarioNuevo))
                 .findFirst()
@@ -77,7 +80,7 @@ public class Sistema {
         usuarioOriginal.direccion(usuarioNuevo.direccion());
     }
 
-    public void crearIncidencia(Incidencia nuevaIncidencia) {
+    public void crearIncidencia(@Valid Incidencia nuevaIncidencia) {
         if (usuarioActual == null) {
             throw new UsuarioNoLogeado();
         }
@@ -94,7 +97,7 @@ public class Sistema {
         incidencias.add(nuevaIncidencia);
     }
 
-    public List<Incidencia> listarIncidenciasDeUsuario(Usuario usuario) {
+    public List<Incidencia> listarIncidenciasDeUsuario(@Valid Usuario usuario) {
         List<Incidencia> lista_incidencias = new ArrayList<>();
 
         for (Incidencia incidencia : incidencias) {
@@ -106,7 +109,7 @@ public class Sistema {
         return lista_incidencias;
     }
 
-    public List<Incidencia> buscarIncidencias(TipoIncidencia tipo, EstadoIncidencia estado){
+    public List<Incidencia> buscarIncidencias(@Valid TipoIncidencia tipo, @Valid EstadoIncidencia estado){
         List<Incidencia> lista_incidencias = new ArrayList<>();
 
         for (Incidencia incidencia : incidencias) {
@@ -118,7 +121,7 @@ public class Sistema {
         return lista_incidencias;
     }
 
-    public void borrarIncidencia(Usuario usuario, Incidencia incidencia) {
+    public void borrarIncidencia(@Valid Usuario usuario, @Valid Incidencia incidencia) {
         if (!incidencias.contains(incidencia)) {
             throw new IncidenciaNoExiste();
         }
@@ -135,7 +138,7 @@ public class Sistema {
         }
     }
 
-    public void modificarEstadoIncidencia(Incidencia incidenciaNuevoEstado, Usuario usuarioLogeado) {
+    public void modificarEstadoIncidencia(@Valid Incidencia incidenciaNuevoEstado, @Valid Usuario usuarioLogeado) {
         if (usuarioLogeado == null) {
             throw new UsuarioNoLogeado();
         }
@@ -151,7 +154,7 @@ public class Sistema {
         incidenciaOriginal.estadoIncidencia(incidenciaNuevoEstado.estadoIncidencia());
     }
 
-    public void addTipoIncidencia(TipoIncidencia nuevoTipo, Usuario usuarioLogeado) {
+    public void addTipoIncidencia(@Valid TipoIncidencia nuevoTipo, @Valid Usuario usuarioLogeado) {
         if (usuarioLogeado == null){
             throw new UsuarioNoLogeado();
         }
@@ -168,14 +171,14 @@ public class Sistema {
         tiposDeIncidencia.add(nuevoTipo);
     }
 
-    public void borrarTipoIncidencia(TipoIncidencia tipoIncidencia) {
+    public void borrarTipoIncidencia(@Valid TipoIncidencia tipoIncidencia) {
         if (!esAdmin(usuarioActual)){
             throw new UsuarioNoAdmin();
         }
         tiposDeIncidencia.remove(tipoIncidencia);
     }
 
-    public boolean esAdmin(Usuario usuario) {
+    public boolean esAdmin(@Valid Usuario usuario) {
         if(usuario.equals(administrador)) {
             return true;
         }
