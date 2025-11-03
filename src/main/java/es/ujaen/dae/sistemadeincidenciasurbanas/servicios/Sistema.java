@@ -22,7 +22,6 @@ public class Sistema {
     private List<Usuario> usuarios;
     private List<Incidencia> incidencias;
     private List<TipoIncidencia> tiposDeIncidencia;
-    private Usuario usuarioActual;
     private static int nIncidencia = 1;
 
     private static final Administrador administrador = new Administrador(
@@ -41,7 +40,6 @@ public class Sistema {
         this.usuarios = new ArrayList<>();
         this.incidencias = new ArrayList<>();
         this.tiposDeIncidencia = new ArrayList<>();
-        this.usuarioActual = null;
         usuarios.add(administrador);
     }
 
@@ -53,18 +51,13 @@ public class Sistema {
         usuarios.add(nuevoUsuario);
     }
 
-    public boolean iniciarSesion(@NotNull String login, @NotNull String clave) {
+    public Usuario iniciarSesion(@NotNull String login, @NotNull String clave) {
         for (Usuario u : usuarios) {
             if (u.login().equals(login) && u.claveAcceso().equals(clave)) {
-                usuarioActual = u;
-                return true;
+                return u;
             }
         }
-        return false;
-    }
-
-    public void cerrarSesion() {
-        usuarioActual = null;
+        throw new UsuarioNoEncontrado();
     }
 
     public void actualizarDatosUsuario(@Valid Usuario usuarioNuevo) {
@@ -80,8 +73,8 @@ public class Sistema {
         usuarioOriginal.direccion(usuarioNuevo.direccion());
     }
 
-    public void crearIncidencia(@Valid Incidencia nuevaIncidencia) {
-        if (usuarioActual == null) {
+    public void crearIncidencia(@Valid Incidencia nuevaIncidencia, @NotNull Usuario usuario) {
+        if (usuario == null) {
             throw new UsuarioNoLogeado();
         }
 
@@ -171,8 +164,8 @@ public class Sistema {
         tiposDeIncidencia.add(nuevoTipo);
     }
 
-    public void borrarTipoIncidencia(@Valid TipoIncidencia tipoIncidencia) {
-        if (!esAdmin(usuarioActual)){
+    public void borrarTipoIncidencia(@Valid TipoIncidencia tipoIncidencia, @NotNull Usuario usuario) {
+        if (!esAdmin(usuario)){
             throw new UsuarioNoAdmin();
         }
         tiposDeIncidencia.remove(tipoIncidencia);
