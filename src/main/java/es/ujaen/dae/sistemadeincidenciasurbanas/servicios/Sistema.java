@@ -168,6 +168,12 @@ public class Sistema {
         if (!esAdmin(usuario)){
             throw new UsuarioNoAdmin();
         }
+        
+        boolean enUso = incidencias.stream().anyMatch(incidencia -> incidencia.tipoIncidencia().equals(tipoIncidencia));
+        if (enUso) {
+            throw new TipoIncidenciaEnUso("No se puede borrar un tipo de incidencia que está siendo utilizado por una o más incidencias.");
+        }
+
         tiposDeIncidencia.remove(tipoIncidencia);
     }
 
