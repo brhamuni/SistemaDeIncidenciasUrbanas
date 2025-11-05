@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Positive;
 import java.time.LocalDateTime;
 
 public class Incidencia {
-    @Positive
+
     private int id;
 
     private LocalDateTime fecha;
@@ -21,10 +21,8 @@ public class Incidencia {
 
     private LocalizacionGPS localizacionGPS;
 
-    @NotNull
-    private EstadoIncidencia estadoIncidencia;
+     private EstadoIncidencia estadoIncidencia;
 
-    @NotNull
     private Usuario usuario;
 
     @NotNull

@@ -51,13 +51,10 @@ public class Sistema {
         usuarios.add(nuevoUsuario);
     }
 
-    public Usuario iniciarSesion(@NotNull String login, @NotNull String clave) {
-        for (Usuario u : usuarios) {
-            if (u.login().equals(login) && u.claveAcceso().equals(clave)) {
-                return u;
-            }
-        }
-        throw new UsuarioNoEncontrado();
+    public Optional<Usuario> iniciarSesion(@NotNull String login, @NotNull String clave) {
+        return usuarios.stream()
+                .filter(u -> u.login().equals(login) && u.claveAcceso().equals(clave))
+                .findFirst();
     }
 
     public void actualizarDatosUsuario(@Valid Usuario usuarioNuevo) {
@@ -102,15 +99,18 @@ public class Sistema {
         return lista_incidencias;
     }
 
-    public List<Incidencia> buscarIncidencias(@Valid TipoIncidencia tipo, @Valid EstadoIncidencia estado){
+    public List<Incidencia> buscarIncidencias(TipoIncidencia tipo, EstadoIncidencia estado){
         List<Incidencia> lista_incidencias = new ArrayList<>();
 
         for (Incidencia incidencia : incidencias) {
-            if(incidencia.estadoIncidencia().equals(estado) && incidencia.tipoIncidencia().equals(tipo)) {
+            // Lógica de búsqueda mejorada para permitir nulos
+            boolean matchTipo = (tipo == null) || incidencia.tipoIncidencia().equals(tipo);
+            boolean matchEstado = (estado == null) || incidencia.estadoIncidencia().equals(estado);
+
+            if (matchEstado && matchTipo) {
                 lista_incidencias.add(incidencia);
             }
         }
-
         return lista_incidencias;
     }
 
@@ -131,7 +131,7 @@ public class Sistema {
         }
     }
 
-    public void modificarEstadoIncidencia(@Valid Incidencia incidenciaNuevoEstado, @Valid Usuario usuarioLogeado) {
+    public void modificarEstadoIncidencia(Incidencia incidenciaNuevoEstado, @Valid Usuario usuarioLogeado) {
         if (usuarioLogeado == null) {
             throw new UsuarioNoLogeado();
         }
@@ -158,7 +158,7 @@ public class Sistema {
         boolean yaExiste = tiposDeIncidencia.stream()
                 .anyMatch(t -> t.nombre().equalsIgnoreCase(nuevoTipo.nombre()));
         if (yaExiste) {
-            throw new TipoIncidenciaYaExiste(); // Deberías crear esta excepción
+            throw new TipoIncidenciaYaExiste();
         }
 
         tiposDeIncidencia.add(nuevoTipo);
@@ -168,7 +168,7 @@ public class Sistema {
         if (!esAdmin(usuario)){
             throw new UsuarioNoAdmin();
         }
-        
+
         boolean enUso = incidencias.stream().anyMatch(incidencia -> incidencia.tipoIncidencia().equals(tipoIncidencia));
         if (enUso) {
             throw new TipoIncidenciaEnUso("No se puede borrar un tipo de incidencia que está siendo utilizado por una o más incidencias.");
@@ -178,10 +178,7 @@ public class Sistema {
     }
 
     public boolean esAdmin(@Valid Usuario usuario) {
-        if(usuario.equals(administrador)) {
-            return true;
-        }
-        return false;
+        return usuario != null && usuario.equals(administrador);
     }
 
     public List<TipoIncidencia> listarTiposDeIncidencia() {
