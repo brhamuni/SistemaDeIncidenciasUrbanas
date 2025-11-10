@@ -1,5 +1,6 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.entidades;
 
+import jakarta.persistence.Version;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -15,6 +16,9 @@ public class TipoIncidencia {
 
     @NotBlank(message = "La descripción no puede estar vacía")
     private String descripcion;
+
+    @Version
+    private long version;
 
     public TipoIncidencia() {
     }

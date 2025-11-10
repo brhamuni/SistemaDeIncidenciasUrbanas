@@ -46,6 +46,8 @@ public class Usuario {
     @Column(nullable = false)
     private String claveAcceso;
 
+    @Version
+    private long version;
 
     public Usuario() {
     }
