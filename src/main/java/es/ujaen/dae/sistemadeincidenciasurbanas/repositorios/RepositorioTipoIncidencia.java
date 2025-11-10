@@ -41,10 +41,10 @@ public class RepositorioTipoIncidencia {
     }
 
     public boolean existe(String nombre) {
-        return !em.createQuery("SELECT 1 FROM TipoIncidencia t WHERE t.nombre = :nombre", Long.class)
-                .setParameter("nombre", nombre)
-                .getResultList()
-                .isEmpty();
+        Long count = em.createQuery("SELECT COUNT(t) FROM TipoIncidencia t WHERE t.nombre = :nombre", Long.class)
+            .setParameter("nombre", nombre)
+            .getSingleResult();
+        return count > 0;
     }
 
     @Cacheable("tiposIncidencia")
