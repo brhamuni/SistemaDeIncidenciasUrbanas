@@ -89,39 +89,28 @@ public class Sistema {
 
     @Transactional(readOnly = true)
     public List<Incidencia> listarIncidenciasDeUsuario(@Valid Usuario usuario) {
-        return em.createQuery(
-                        "SELECT i FROM Incidencia i WHERE i.usuario.login = :login", Incidencia.class)
-                .setParameter("login", usuario.login())
-                .getResultList();
+        return repositorioIncidencia.buscarPorUsuario(usuario);
     }
 
     @Transactional(readOnly = true)
     public List<Incidencia> buscarIncidencias(TipoIncidencia tipo, EstadoIncidencia estado) {
-        StringBuilder jpql = new StringBuilder("SELECT i FROM Incidencia i WHERE 1=1");
-        if (tipo != null) jpql.append(" AND i.tipoIncidencia = :tipo");
-        if (estado != null) jpql.append(" AND i.estadoIncidencia = :estado");
-
-        var query = em.createQuery(jpql.toString(), Incidencia.class);
-        if (tipo != null) query.setParameter("tipo", tipo);
-        if (estado != null) query.setParameter("estado", estado);
-
-        return query.getResultList();
+        return repositorioIncidencia.buscarPorTipoYEstado(tipo, estado);
     }
 
     @Transactional
     public void borrarIncidencia(@Valid Usuario usuario, @Valid Incidencia incidencia) {
-        Incidencia inc = em.find(Incidencia.class, incidencia.id());
-        if (inc == null) throw new IncidenciaNoExiste();
+        Incidencia inc = repositorioIncidencia.buscarPorId(incidencia.id())
+                .orElseThrow(IncidenciaNoExiste::new);
 
         if (esAdmin(usuario)) {
-            em.remove(inc);
+            repositorioIncidencia.borrar(inc);
         } else {
             if (!inc.usuario().equals(usuario))
                 throw new AccionNoAutorizada("No puedes borrar una incidencia que no es tuya");
             if (inc.estadoIncidencia() != EstadoIncidencia.PENDIENTE)
                 throw new AccionNoAutorizada("Solo puedes borrar incidencias pendientes");
 
-            em.remove(inc);
+            repositorioIncidencia.borrar(inc);
         }
     }
 
