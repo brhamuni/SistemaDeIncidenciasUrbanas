@@ -59,12 +59,7 @@ public class Sistema {
 
     @Transactional
     public void actualizarDatosUsuario(@Valid Usuario usuarioNuevo) {
-        Usuario usuarioOriginal = em.createQuery(
-                        "SELECT u FROM Usuario u WHERE u.login = :login", Usuario.class)
-                .setParameter("login", usuarioNuevo.login())
-                .getResultList()
-                .stream()
-                .findFirst()
+        Usuario usuarioOriginal = repositorioUsuario.buscarPorLogin(usuarioNuevo.login())
                 .orElseThrow(UsuarioNoEncontrado::new);
 
         usuarioOriginal.nombre(usuarioNuevo.nombre());
@@ -72,21 +67,24 @@ public class Sistema {
         usuarioOriginal.email(usuarioNuevo.email());
         usuarioOriginal.telefono(usuarioNuevo.telefono());
         usuarioOriginal.direccion(usuarioNuevo.direccion());
+
+        repositorioUsuario.actualizar(usuarioOriginal);
     }
 
     @Transactional
     public void crearIncidencia(@Valid Incidencia nuevaIncidencia, @NotNull Usuario usuario) {
         if (usuario == null) throw new UsuarioNoLogeado();
 
-        Usuario usuarioAttached = em.merge(usuario);
-        TipoIncidencia tipoAttached = em.merge(nuevaIncidencia.tipoIncidencia());
+        Usuario usuarioAttached = repositorioUsuario.actualizar(usuario); // attach
+        TipoIncidencia tipoAttached = repositorioTipo.buscar(nuevaIncidencia.tipoIncidencia().nombre())
+                .orElseThrow(() -> new IllegalArgumentException("Tipo de incidencia no existe"));
 
         nuevaIncidencia.fecha(LocalDateTime.now());
         nuevaIncidencia.usuario(usuarioAttached);
         nuevaIncidencia.tipoIncidencia(tipoAttached);
         nuevaIncidencia.estadoIncidencia(EstadoIncidencia.PENDIENTE);
 
-        em.persist(nuevaIncidencia);
+        repositorioIncidencia.guardar(nuevaIncidencia);
     }
 
     @Transactional(readOnly = true)
