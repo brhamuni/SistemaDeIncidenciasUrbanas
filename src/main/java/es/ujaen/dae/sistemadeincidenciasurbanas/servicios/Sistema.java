@@ -153,4 +153,20 @@ public class Sistema {
         return usuario != null && usuario.login().equals(administrador.login());
     }
 
+    @Transactional
+    public void addTipoIncidencia(@Valid TipoIncidencia nuevoTipo, @Valid Usuario usuarioLogeado) {
+        if (usuarioLogeado == null) throw new UsuarioNoLogeado();
+        if (!esAdmin(usuarioLogeado)) throw new UsuarioNoAdmin();
+
+        boolean existe = !em.createQuery(
+                        "SELECT t FROM TipoIncidencia t WHERE t.nombre = :nombre", TipoIncidencia.class)
+                .setParameter("nombre", nuevoTipo.nombre())
+                .getResultList()
+                .isEmpty();
+
+        if (existe) throw new TipoIncidenciaYaExiste();
+
+        em.persist(nuevoTipo);
+    }
+
 }
