@@ -1,9 +1,15 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.entidades;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
+import java.util.Objects;
+
+@Entity
 public class TipoIncidencia {
 
+    @Id
     @NotBlank(message = "El nombre no puede estar vacío")
     private String nombre;
 
@@ -32,5 +38,18 @@ public class TipoIncidencia {
 
     public void descripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TipoIncidencia that = (TipoIncidencia) o;
+        return Objects.equals(nombre, that.nombre);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(nombre);
     }
 }
