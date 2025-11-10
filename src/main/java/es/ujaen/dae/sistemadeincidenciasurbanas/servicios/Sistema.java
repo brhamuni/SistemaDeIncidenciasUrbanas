@@ -67,4 +67,37 @@ public class Sistema {
                 .stream()
                 .findFirst();
     }
+
+    @Transactional
+    public void actualizarDatosUsuario(@Valid Usuario usuarioNuevo) {
+        Usuario usuarioOriginal = em.createQuery(
+                        "SELECT u FROM Usuario u WHERE u.login = :login", Usuario.class)
+                .setParameter("login", usuarioNuevo.login())
+                .getResultList()
+                .stream()
+                .findFirst()
+                .orElseThrow(UsuarioNoEncontrado::new);
+
+        usuarioOriginal.nombre(usuarioNuevo.nombre());
+        usuarioOriginal.apellidos(usuarioNuevo.apellidos());
+        usuarioOriginal.email(usuarioNuevo.email());
+        usuarioOriginal.telefono(usuarioNuevo.telefono());
+        usuarioOriginal.direccion(usuarioNuevo.direccion());
+    }
+
+    @Transactional
+    public void crearIncidencia(@Valid Incidencia nuevaIncidencia, @NotNull Usuario usuario) {
+        if (usuario == null) throw new UsuarioNoLogeado();
+
+        Usuario usuarioAttached = em.merge(usuario);
+        TipoIncidencia tipoAttached = em.merge(nuevaIncidencia.tipoIncidencia());
+
+        nuevaIncidencia.fecha(LocalDateTime.now());
+        nuevaIncidencia.usuario(usuarioAttached);
+        nuevaIncidencia.tipoIncidencia(tipoAttached);
+        nuevaIncidencia.estadoIncidencia(EstadoIncidencia.PENDIENTE);
+
+        em.persist(nuevaIncidencia);
+    }
+
 }
