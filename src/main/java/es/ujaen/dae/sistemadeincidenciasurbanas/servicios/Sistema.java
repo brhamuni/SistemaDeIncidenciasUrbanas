@@ -119,10 +119,11 @@ public class Sistema {
         if (usuarioLogeado == null) throw new UsuarioNoLogeado();
         if (!esAdmin(usuarioLogeado)) throw new UsuarioNoAdmin();
 
-        Incidencia inc = em.find(Incidencia.class, incidenciaNuevoEstado.id());
-        if (inc == null) throw new IncidenciaNoExiste();
+        Incidencia inc = repositorioIncidencia.buscarPorId(incidenciaNuevoEstado.id())
+                .orElseThrow(IncidenciaNoExiste::new);
 
         inc.estadoIncidencia(incidenciaNuevoEstado.estadoIncidencia());
+        repositorioIncidencia.actualizar(inc);
     }
 
     public boolean esAdmin(@Valid Usuario usuario) {
@@ -134,15 +135,9 @@ public class Sistema {
         if (usuarioLogeado == null) throw new UsuarioNoLogeado();
         if (!esAdmin(usuarioLogeado)) throw new UsuarioNoAdmin();
 
-        boolean existe = !em.createQuery(
-                        "SELECT t FROM TipoIncidencia t WHERE t.nombre = :nombre", TipoIncidencia.class)
-                .setParameter("nombre", nuevoTipo.nombre())
-                .getResultList()
-                .isEmpty();
+        if (repositorioTipo.existe(nuevoTipo.nombre())) throw new TipoIncidenciaYaExiste();
 
-        if (existe) throw new TipoIncidenciaYaExiste();
-
-        em.persist(nuevoTipo);
+        repositorioTipo.guardar(nuevoTipo);
     }
 
     @Transactional
