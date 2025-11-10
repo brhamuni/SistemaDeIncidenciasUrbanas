@@ -46,25 +46,15 @@ public class Sistema {
 
     @Transactional
     public void registrarUsuario(@Valid Usuario nuevoUsuario) {
-        boolean existe = !em.createQuery(
-                        "SELECT u FROM Usuario u WHERE u.login = :login", Usuario.class)
-                .setParameter("login", nuevoUsuario.login())
-                .getResultList().isEmpty();
-
-        if (existe) throw new UsuarioYaExiste();
-
-        em.persist(nuevoUsuario);
+        if (repositorioUsuario.buscarPorLogin(nuevoUsuario.login()).isPresent()) {
+            throw new UsuarioYaExiste();
+        }
+        repositorioUsuario.guardar(nuevoUsuario);
     }
 
     @Transactional(readOnly = true)
     public Optional<Usuario> iniciarSesion(@NotNull String login, @NotNull String clave) {
-        return em.createQuery(
-                        "SELECT u FROM Usuario u WHERE u.login = :login AND u.claveAcceso = :clave", Usuario.class)
-                .setParameter("login", login)
-                .setParameter("clave", clave)
-                .getResultList()
-                .stream()
-                .findFirst();
+        return repositorioUsuario.buscarPorLoginYClaveAcceso(login, clave);
     }
 
     @Transactional
