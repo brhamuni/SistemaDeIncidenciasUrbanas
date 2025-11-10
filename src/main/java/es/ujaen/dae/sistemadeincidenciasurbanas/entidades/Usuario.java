@@ -1,19 +1,31 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.entidades;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.Objects;
 
-
+@Entity
+@Table(name = "usuarios")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE) //Con esto manejamos la herencia entre usuarios y administradores
+@DiscriminatorColumn(name = "TIPO_USUARIO") //Columna que indica el tipo de usuario
 public class Usuario {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+
     @NotBlank(message = "Los apellidos no pueden estar vacíos")
+    @Column(nullable = false)
     private String apellidos;
 
     @NotBlank(message = "El nombre no puede estar vacío")
+    @Column(nullable = false)
     private String nombre;
 
     @NotNull(message = "La fecha de nacimiento es obligatoria")
     @Past(message = "La fecha de nacimiento debe ser una fecha pasada")
+    @Column(nullable = false)
     private LocalDate fechaNacimiento;
 
     private String direccion;
@@ -23,12 +35,15 @@ public class Usuario {
 
     @NotBlank(message = "El email no puede estar vacío")
     @Email(message = "El formato del email no es válido")
+    @Column(nullable = false)
     private String email;
 
     @NotBlank(message = "El login no puede estar vacío")
+    @Column(nullable = false)
     private String login;
 
     @NotBlank(message = "La clave de acceso no puede estar vacía")
+    @Column(nullable = false)
     private String claveAcceso;
 
 
@@ -115,12 +130,12 @@ public class Usuario {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Usuario usuario = (Usuario) o;
-        return login.equals(usuario.login);
+        return Objects.equals(login, usuario.login);
     }
 
     @Override
     public int hashCode() {
-        return login.hashCode();
+        return Objects.hash(login);
     }
 
 }
