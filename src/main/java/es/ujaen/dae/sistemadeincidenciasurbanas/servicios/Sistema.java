@@ -121,4 +121,36 @@ public class Sistema {
         return query.getResultList();
     }
 
+    @Transactional
+    public void borrarIncidencia(@Valid Usuario usuario, @Valid Incidencia incidencia) {
+        Incidencia inc = em.find(Incidencia.class, incidencia.id());
+        if (inc == null) throw new IncidenciaNoExiste();
+
+        if (esAdmin(usuario)) {
+            em.remove(inc);
+        } else {
+            if (!inc.usuario().equals(usuario))
+                throw new AccionNoAutorizada("No puedes borrar una incidencia que no es tuya");
+            if (inc.estadoIncidencia() != EstadoIncidencia.PENDIENTE)
+                throw new AccionNoAutorizada("Solo puedes borrar incidencias pendientes");
+
+            em.remove(inc);
+        }
+    }
+
+    @Transactional
+    public void modificarEstadoIncidencia(Incidencia incidenciaNuevoEstado, @Valid Usuario usuarioLogeado) {
+        if (usuarioLogeado == null) throw new UsuarioNoLogeado();
+        if (!esAdmin(usuarioLogeado)) throw new UsuarioNoAdmin();
+
+        Incidencia inc = em.find(Incidencia.class, incidenciaNuevoEstado.id());
+        if (inc == null) throw new IncidenciaNoExiste();
+
+        inc.estadoIncidencia(incidenciaNuevoEstado.estadoIncidencia());
+    }
+
+    public boolean esAdmin(@Valid Usuario usuario) {
+        return usuario != null && usuario.login().equals(administrador.login());
+    }
+
 }
