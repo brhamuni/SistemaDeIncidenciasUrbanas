@@ -3,11 +3,15 @@ package es.ujaen.dae.sistemadeincidenciasurbanas.servicios;
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
-import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,172 +21,27 @@ import java.util.Optional;
 
 @Service
 @Validated
+@Transactional(rollbackFor = Exception.class)
 public class Sistema {
 
-    private List<Usuario> usuarios;
-    private List<Incidencia> incidencias;
-    private List<TipoIncidencia> tiposDeIncidencia;
-    private static int nIncidencia = 1;
+    @PersistenceContext
+    private EntityManager em;
 
     private static final Administrador administrador = new Administrador(
-            "del Sistema",
-            "Administrador",
-            LocalDate.of(2000, 1, 1),
-            "N/A",
-            "600000000",
-            "admin@sistema.com",
-            "admin",
-            "admin1234"
+            "del Sistema", "Administrador", LocalDate.of(2000, 1, 1),
+            "N/A", "600000000", "admin@sistema.com", "admin", "admin1234"
     );
 
+    @PostConstruct
+    public void inicializar() {
+        // No usamos iniciarSesion() aquí porque @Transactional no aplica aún
+        List<Usuario> adminList = em.createQuery(
+                        "SELECT u FROM Usuario u WHERE u.login = :login", Usuario.class)
+                .setParameter("login", administrador.login())
+                .getResultList();
 
-    public Sistema() {
-        this.usuarios = new ArrayList<>();
-        this.incidencias = new ArrayList<>();
-        this.tiposDeIncidencia = new ArrayList<>();
-        usuarios.add(administrador);
-    }
-
-    public void registrarUsuario(@Valid Usuario nuevoUsuario) {
-        Optional<Usuario> existente = usuarios.stream().filter(u -> u.equals(nuevoUsuario)).findFirst();
-        if (existente.isPresent()) {
-            throw new UsuarioYaExiste();
-        }
-        usuarios.add(nuevoUsuario);
-    }
-
-    public Optional<Usuario> iniciarSesion(@NotNull String login, @NotNull String clave) {
-        return usuarios.stream()
-                .filter(u -> u.login().equals(login) && u.claveAcceso().equals(clave))
-                .findFirst();
-    }
-
-    public void actualizarDatosUsuario(@Valid Usuario usuarioNuevo) {
-        Usuario usuarioOriginal = usuarios.stream()
-                .filter(u -> u.equals(usuarioNuevo))
-                .findFirst()
-                .orElseThrow(() -> new UsuarioNoEncontrado());
-
-        usuarioOriginal.nombre(usuarioNuevo.nombre());
-        usuarioOriginal.apellidos(usuarioNuevo.apellidos());
-        usuarioOriginal.email(usuarioNuevo.email());
-        usuarioOriginal.telefono(usuarioNuevo.telefono());
-        usuarioOriginal.direccion(usuarioNuevo.direccion());
-    }
-
-    public void crearIncidencia(@Valid Incidencia nuevaIncidencia, @NotNull Usuario usuario) {
-        if (usuario == null) {
-            throw new UsuarioNoLogeado();
-        }
-
-        nuevaIncidencia.id(nIncidencia++);
-        nuevaIncidencia.fecha(LocalDateTime.now());
-        nuevaIncidencia.usuario(usuario);
-        nuevaIncidencia.estadoIncidencia(EstadoIncidencia.PENDIENTE);
-
-        if (incidencias.contains(nuevaIncidencia)) {
-            throw new IncidenciaYaExiste();
-        }
-
-        incidencias.add(nuevaIncidencia);
-    }
-
-    public List<Incidencia> listarIncidenciasDeUsuario(@Valid Usuario usuario) {
-        List<Incidencia> lista_incidencias = new ArrayList<>();
-
-        for (Incidencia incidencia : incidencias) {
-            if(incidencia.usuario().equals(usuario)) {
-                lista_incidencias.add(incidencia);
-            }
-        }
-
-        return lista_incidencias;
-    }
-
-    public List<Incidencia> buscarIncidencias(TipoIncidencia tipo, EstadoIncidencia estado){
-        List<Incidencia> lista_incidencias = new ArrayList<>();
-
-        for (Incidencia incidencia : incidencias) {
-            // Lógica de búsqueda mejorada para permitir nulos
-            boolean matchTipo = (tipo == null) || incidencia.tipoIncidencia().equals(tipo);
-            boolean matchEstado = (estado == null) || incidencia.estadoIncidencia().equals(estado);
-
-            if (matchEstado && matchTipo) {
-                lista_incidencias.add(incidencia);
-            }
-        }
-        return lista_incidencias;
-    }
-
-    public void borrarIncidencia(@Valid Usuario usuario, @Valid Incidencia incidencia) {
-        if (!incidencias.contains(incidencia)) {
-            throw new IncidenciaNoExiste();
-        }
-        if (esAdmin(usuario)) {
-            incidencias.remove(incidencia);
-        }else{
-            if (!incidencia.usuario().equals(usuario)) {
-                throw new AccionNoAutorizada("No puedes borrar una incidencia que no es tuya");
-            }
-            if (incidencia.estadoIncidencia() != EstadoIncidencia.PENDIENTE) {
-                throw new AccionNoAutorizada("Solo puedes borrar incidencias pendientes");
-            }
-            incidencias.remove(incidencia);
+        if (adminList.isEmpty()) {
+            em.persist(administrador);
         }
     }
-
-    public void modificarEstadoIncidencia(Incidencia incidenciaNuevoEstado, @Valid Usuario usuarioLogeado) {
-        if (usuarioLogeado == null) {
-            throw new UsuarioNoLogeado();
-        }
-        if (!esAdmin(usuarioLogeado)) {
-            throw new UsuarioNoAdmin();
-        }
-
-        Incidencia incidenciaOriginal = incidencias.stream()
-                .filter(i -> i.id() == incidenciaNuevoEstado.id())
-                .findFirst()
-                .orElseThrow(() -> new IncidenciaNoExiste());
-
-        incidenciaOriginal.estadoIncidencia(incidenciaNuevoEstado.estadoIncidencia());
-    }
-
-    public void addTipoIncidencia(@Valid TipoIncidencia nuevoTipo, @Valid Usuario usuarioLogeado) {
-        if (usuarioLogeado == null){
-            throw new UsuarioNoLogeado();
-        }
-        if (!esAdmin(usuarioLogeado)){
-            throw new UsuarioNoAdmin();
-        }
-
-        boolean yaExiste = tiposDeIncidencia.stream()
-                .anyMatch(t -> t.nombre().equalsIgnoreCase(nuevoTipo.nombre()));
-        if (yaExiste) {
-            throw new TipoIncidenciaYaExiste();
-        }
-
-        tiposDeIncidencia.add(nuevoTipo);
-    }
-
-    public void borrarTipoIncidencia(@Valid TipoIncidencia tipoIncidencia, @NotNull Usuario usuario) {
-        if (!esAdmin(usuario)){
-            throw new UsuarioNoAdmin();
-        }
-
-        boolean enUso = incidencias.stream().anyMatch(incidencia -> incidencia.tipoIncidencia().equals(tipoIncidencia));
-        if (enUso) {
-            throw new TipoIncidenciaEnUso("No se puede borrar un tipo de incidencia que está siendo utilizado por una o más incidencias.");
-        }
-
-        tiposDeIncidencia.remove(tipoIncidencia);
-    }
-
-    public boolean esAdmin(@Valid Usuario usuario) {
-        return usuario != null && usuario.equals(administrador);
-    }
-
-    public List<TipoIncidencia> listarTiposDeIncidencia() {
-        return new ArrayList<>(tiposDeIncidencia);
-    }
-
 }
