@@ -144,22 +144,15 @@ public class Sistema {
     public void borrarTipoIncidencia(@Valid TipoIncidencia tipoIncidencia, @NotNull Usuario usuario) {
         if (!esAdmin(usuario)) throw new UsuarioNoAdmin();
 
-        boolean enUso = !em.createQuery(
-                        "SELECT i FROM Incidencia i WHERE i.tipoIncidencia.nombre = :nombre", Incidencia.class)
-                .setParameter("nombre", tipoIncidencia.nombre())
-                .getResultList()
-                .isEmpty();
-
-        if (enUso)
+        if (repositorioIncidencia.existeConTipoIncidencia(tipoIncidencia)) {
             throw new TipoIncidenciaEnUso("No se puede borrar un tipo de incidencia en uso.");
+        }
 
-        TipoIncidencia tipo = em.find(TipoIncidencia.class, tipoIncidencia.nombre());
-        if (tipo != null) em.remove(tipo);
+        repositorioTipo.borrar(tipoIncidencia);
     }
 
     @Transactional(readOnly = true)
     public List<TipoIncidencia> listarTiposDeIncidencia() {
-        return em.createQuery("SELECT t FROM TipoIncidencia t", TipoIncidencia.class)
-                .getResultList();
+        return repositorioTipo.listarTodos();
     }
 }
