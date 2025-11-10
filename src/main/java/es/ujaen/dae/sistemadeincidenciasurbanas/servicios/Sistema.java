@@ -2,20 +2,17 @@ package es.ujaen.dae.sistemadeincidenciasurbanas.servicios;
 
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.*;
-import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
-
+import es.ujaen.dae.sistemadeincidenciasurbanas.repositorios.*;
 import jakarta.annotation.PostConstruct;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,8 +21,14 @@ import java.util.Optional;
 @Transactional(rollbackFor = Exception.class)
 public class Sistema {
 
-    @PersistenceContext
-    private EntityManager em;
+    @Autowired
+    private RepositorioUsuario repositorioUsuario;
+
+    @Autowired
+    private RepositorioIncidencia repositorioIncidencia;
+
+    @Autowired
+    private RepositorioTipoIncidencia repositorioTipo;
 
     private static final Administrador administrador = new Administrador(
             "del Sistema", "Administrador", LocalDate.of(2000, 1, 1),
@@ -34,15 +37,11 @@ public class Sistema {
 
     @PostConstruct
     public void inicializar() {
-        // No usamos iniciarSesion() aquí porque @Transactional no aplica aún
-        List<Usuario> adminList = em.createQuery(
-                        "SELECT u FROM Usuario u WHERE u.login = :login", Usuario.class)
-                .setParameter("login", administrador.login())
-                .getResultList();
-
-        if (adminList.isEmpty()) {
-            em.persist(administrador);
-        }
+        repositorioUsuario.buscarPorLogin(administrador.login())
+                .orElseGet(() -> {
+                    repositorioUsuario.guardar(administrador);
+                    return administrador;
+                });
     }
 
     @Transactional
@@ -191,5 +190,4 @@ public class Sistema {
         return em.createQuery("SELECT t FROM TipoIncidencia t", TipoIncidencia.class)
                 .getResultList();
     }
-
 }
