@@ -1,32 +1,50 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.entidades;
 
 import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
+@Entity
+@Table(name = "incidencias")
 public class Incidencia {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @Column(nullable = false)
     private LocalDateTime fecha;
 
     @NotBlank(message = "La descripción no puede estar vacía")
+    @Column(nullable = false, length = 500)
     private String descripcion;
 
     @NotBlank(message = "La localización no puede estar vacía")
+    @Column(nullable = false)
     private String localizacion;
 
+    @Embedded
     private LocalizacionGPS localizacionGPS;
 
-     private EstadoIncidencia estadoIncidencia;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private EstadoIncidencia estadoIncidencia;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id")
     private Usuario usuario;
 
     @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tipo_incidencia_id")
     private TipoIncidencia tipoIncidencia;
+
+    @Version
+    private long version;
 
     public Incidencia() {}
 
@@ -44,60 +62,60 @@ public class Incidencia {
     public LocalDateTime fecha() {
         return fecha;
     }
+    public String descripcion() {
+        return descripcion;
+    }
+    public String localizacion() {
+        return localizacion;
+    }
+    public LocalizacionGPS localizacionGPS() {
+        return localizacionGPS;
+    }
+    public EstadoIncidencia estadoIncidencia() {
+        return estadoIncidencia;
+    }
+    public Usuario usuario() {
+        return usuario;
+    }
+    public TipoIncidencia tipoIncidencia() {
+        return tipoIncidencia;
+    }
+    public int id() {return id;}
 
     public void fecha(LocalDateTime fecha) {
         this.fecha = fecha;
     }
-
-    public String descripcion() {
-        return descripcion;
-    }
-
     public void descripcion(String descripcion) {
         this.descripcion = descripcion;
     }
-
-    public String localizacion() {
-        return localizacion;
-    }
-
     public void localizacion(String localizacion) {
         this.localizacion = localizacion;
     }
-
-    public LocalizacionGPS localizacionGPS() {
-        return localizacionGPS;
-    }
-
     public void localizacionGPS(LocalizacionGPS localizacionGPS) {
         this.localizacionGPS = localizacionGPS;
     }
-
-    public EstadoIncidencia estadoIncidencia() {
-        return estadoIncidencia;
-    }
-
     public void estadoIncidencia(EstadoIncidencia estadoIncidencia) {
         this.estadoIncidencia = estadoIncidencia;
     }
-
-    public Usuario usuario() {
-        return usuario;
-    }
-
     public void usuario(Usuario usuario) {
         this.usuario = usuario;
     }
-
-    public TipoIncidencia tipoIncidencia() {
-        return tipoIncidencia;
-    }
-
     public void tipoIncidencia(TipoIncidencia tipoIncidencia) {
         this.tipoIncidencia = tipoIncidencia;
     }
-
-    public int id() {return id;}
-
     public void id(int id) {this.id = id;}
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o){ return true; }
+        if (o == null || getClass() != o.getClass()){ return false; }
+
+        Incidencia that = (Incidencia) o;
+        return id != 0 && id == that.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return id == 0 ? super.hashCode() : Objects.hash(id);
+    }
 }
