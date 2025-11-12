@@ -41,39 +41,59 @@ public class RepositorioIncidencia {
 
     @Cacheable(value = "incidenciasPorId", key = "#id")
     public Optional<Incidencia> buscarPorId(int id) {
-        return Optional.ofNullable(em.find(Incidencia.class, id));
+        Optional<Incidencia> optIncidencia = Optional.ofNullable(em.find(Incidencia.class, id));
+
+        optIncidencia.ifPresent(inc -> {
+            inc.usuario().login();
+            inc.tipoIncidencia().nombre();
+        });
+
+        return optIncidencia;
     }
 
     public List<Incidencia> buscarPorUsuario(Usuario usuario) {
-        return em.createQuery("SELECT i FROM Incidencia i WHERE i.usuario = :usuario", Incidencia.class)
+        List<Incidencia> incidencias = em.createQuery("SELECT i FROM Incidencia i WHERE i.usuario = :usuario", Incidencia.class)
                 .setParameter("usuario", usuario)
                 .getResultList();
+
+        incidencias.forEach(inc -> {
+            inc.usuario().login();
+            inc.tipoIncidencia().nombre();
+        });
+
+        return incidencias;
     }
 
     public List<Incidencia> buscarPorTipoYEstado(TipoIncidencia tipo, EstadoIncidencia estado) {
-        StringBuilder jpql = new StringBuilder("SELECT i FROM Incidencia i WHERE 1=1");
+        StringBuilder select = new StringBuilder("SELECT i FROM Incidencia i WHERE 1=1");
         if (tipo != null) {
-            jpql.append(" AND i.tipoIncidencia = :tipo");
+            select.append(" AND i.tipoIncidencia = :tipo");
         }
         if (estado != null) {
-            jpql.append(" AND i.estadoIncidencia = :estado");
+            select.append(" AND i.estadoIncidencia = :estado");
         }
-
-        var query = em.createQuery(jpql.toString(), Incidencia.class);
+        var query = em.createQuery(select.toString(), Incidencia.class);
         if (tipo != null) {
             query.setParameter("tipo", tipo);
         }
         if (estado != null) {
             query.setParameter("estado", estado);
         }
+        List<Incidencia> incidencias = query.getResultList();
 
-        return query.getResultList();
+        incidencias.forEach(inc -> {
+            inc.usuario().login();
+            inc.tipoIncidencia().nombre();
+        });
+
+        return incidencias;
     }
 
     public boolean existeConTipoIncidencia(TipoIncidencia tipoIncidencia) {
-        return !em.createQuery("SELECT 1 FROM Incidencia i WHERE i.tipoIncidencia = :tipo", Long.class)
+        Long count = em.createQuery("SELECT COUNT(i) FROM Incidencia i WHERE i.tipoIncidencia = :tipo", Long.class)
                 .setParameter("tipo", tipoIncidencia)
-                .getResultList()
-                .isEmpty();
+                .getSingleResult();
+
+        return count > 0;
     }
 }
