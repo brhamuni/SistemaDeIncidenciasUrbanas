@@ -107,15 +107,14 @@ public class Incidencia {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o){ return true; }
-        if (o == null || getClass() != o.getClass()){ return false; }
-
+        if (this == o) return true;
+        if (o == null || !(o instanceof Incidencia)) return false;
         Incidencia that = (Incidencia) o;
-        return id != 0 && id == that.id;
+        return id() != 0 && id() == that.id();
     }
 
     @Override
     public int hashCode() {
-        return id == 0 ? super.hashCode() : Objects.hash(id);
+        return id() == 0 ? super.hashCode() : java.util.Objects.hash(id());
     }
 }
