@@ -39,7 +39,7 @@ public class Sistema {
     public void inicializar() {
         repositorioUsuario.buscarPorLogin(administrador.login())
                 .orElseGet(() -> {
-                    repositorioUsuario.guardar(administrador);
+                    repositorioUsuario.actualizar(administrador);
                     return administrador;
                 });
     }

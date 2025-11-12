@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ActiveProfiles; // <-- IMPORTANTE
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,14 +17,16 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("test") // Activamos el 'application-test.properties' (H2 y create-drop)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD) // Limpiamos la bbdd despues de cada test
 class TestSistema {
 
     @Autowired
     private Sistema sistema;
 
+    //Test para Usuario
+
     @Test
-    @DirtiesContext
     void registrarUsuarioExitosamente() {
         Usuario nuevoUsuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(nuevoUsuario);
@@ -38,7 +40,6 @@ class TestSistema {
     }
 
     @Test
-    @DirtiesContext
     void registrarUsuarioLanzaExcepcionSiLoginDuplicado() {
         Usuario usuarioExistente = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuarioExistente);
@@ -50,7 +51,6 @@ class TestSistema {
     }
 
     @Test
-    @DirtiesContext
     void iniciarSesionCorrecto() {
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuario);
@@ -64,7 +64,6 @@ class TestSistema {
     }
 
     @Test
-    @DirtiesContext
     void iniciarSesionIncorrecto() {
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuario);
@@ -73,9 +72,26 @@ class TestSistema {
         assertTrue(optUsuario.isEmpty());
     }
 
+    @Test
+    void actualizarDatosUsuarioCorrectamente() {
+        // Arrange
+        Usuario nuevoUsuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa Vieja", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
+        sistema.registrarUsuario(nuevoUsuario);
+
+        Usuario usuarioLogueado = sistema.iniciarSesion("usuariotest", "usuariotest1234").orElseThrow();
+
+        usuarioLogueado.nombre("Nombre Nuevo");
+        usuarioLogueado.direccion("Casa Nueva");
+        sistema.actualizarDatosUsuario(usuarioLogueado);
+
+        Usuario usuarioActualizado = sistema.iniciarSesion("usuariotest", "usuariotest1234").orElseThrow();
+        assertEquals("Nombre Nuevo", usuarioActualizado.nombre());
+        assertEquals("Casa Nueva", usuarioActualizado.direccion());
+    }
+
+    //Test para Incidencia
 
     @Test
-    @DirtiesContext
     void crearIncidenciaCorrectamente() {
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuario);
@@ -100,29 +116,25 @@ class TestSistema {
         assertEquals(1, incidenciasUsuario.size());
         Incidencia creada = incidenciasUsuario.getFirst();
         assertEquals("Contenedor roto", creada.descripcion());
+        assertEquals(usuarioLogueado, creada.usuario()); // Comprobamos la relación
+        assertEquals(tipo, creada.tipoIncidencia()); // Comprobamos la relación
     }
 
     @Test
-    @DirtiesContext
     void usuarioNormalPuedeBorrarSuIncidenciaPendiente() {
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuario);
-
         Usuario admin = sistema.iniciarSesion("admin", "admin1234").orElseThrow();
         sistema.addTipoIncidencia(new TipoIncidencia("Varios", "Incidencias varias"), admin);
-
         List<TipoIncidencia> tipos = sistema.listarTiposDeIncidencia();
         TipoIncidencia tipo = tipos.getFirst();
-
         Usuario usuarioLogueado = sistema.iniciarSesion("usuariotest", "usuariotest1234").orElseThrow();
-
         Incidencia nuevaIncidencia = new Incidencia();
         nuevaIncidencia.descripcion("Test de borrado");
         nuevaIncidencia.localizacion("Calle Test");
         nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
         nuevaIncidencia.tipoIncidencia(tipo);
         sistema.crearIncidencia(nuevaIncidencia, usuarioLogueado);
-
         Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuarioLogueado).getFirst();
 
         assertDoesNotThrow(() -> sistema.borrarIncidencia(usuarioLogueado, incidencia));
@@ -130,19 +142,15 @@ class TestSistema {
     }
 
     @Test
-    @DirtiesContext
     void usuarioNormalNoPuedeBorrarIncidenciaAjena() {
         Usuario usuarioNormal1 = new Usuario("Test", "Usuario1", LocalDate.of(2004, 1, 1), "Casa 1", "611111111", "user1@test.com", "user1", "user1pass");
         Usuario usuarioNormal2 = new Usuario("Test", "Usuario2", LocalDate.of(2003, 2, 2), "Casa 2", "622222222", "user2@test.com", "user2", "user2pass");
         sistema.registrarUsuario(usuarioNormal1);
         sistema.registrarUsuario(usuarioNormal2);
-
         Usuario admin = sistema.iniciarSesion("admin", "admin1234").orElseThrow();
         sistema.addTipoIncidencia(new TipoIncidencia("Mobiliario", "Mobiliario urbano dañado"), admin);
-
         List<TipoIncidencia> tipos = sistema.listarTiposDeIncidencia();
         TipoIncidencia tipo = tipos.getFirst();
-
         Usuario usuarioLogueado2 = sistema.iniciarSesion("user2", "user2pass").orElseThrow();
         Incidencia nuevaIncidencia = new Incidencia();
         nuevaIncidencia.descripcion("Incidencia de User2");
@@ -150,27 +158,20 @@ class TestSistema {
         nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
         nuevaIncidencia.tipoIncidencia(tipo);
         sistema.crearIncidencia(nuevaIncidencia, usuarioLogueado2);
-
         Incidencia incidenciaDeOtro = sistema.listarIncidenciasDeUsuario(usuarioLogueado2).getFirst();
-
         Usuario usuarioLogueado1 = sistema.iniciarSesion("user1", "user1pass").orElseThrow();
 
         assertThrows(AccionNoAutorizada.class, () -> sistema.borrarIncidencia(usuarioLogueado1, incidenciaDeOtro));
     }
 
     @Test
-    @DirtiesContext
     void administradorPuedeBorrarCualquierIncidencia() {
         Usuario admin = sistema.iniciarSesion("admin", "admin1234").orElseThrow();
-
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuario);
-
         sistema.addTipoIncidencia(new TipoIncidencia("Limpieza", "Suciedad"), admin);
-
         List<TipoIncidencia> tipos = sistema.listarTiposDeIncidencia();
         TipoIncidencia tipo = tipos.getFirst();
-
         Usuario usuarioLogueado = sistema.iniciarSesion("usuariotest", "usuariotest1234").orElseThrow();
         Incidencia nuevaIncidencia = new Incidencia();
         nuevaIncidencia.descripcion("Incidencia de Juan");
@@ -178,26 +179,21 @@ class TestSistema {
         nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
         nuevaIncidencia.tipoIncidencia(tipo);
         sistema.crearIncidencia(nuevaIncidencia, usuarioLogueado);
-
         Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuarioLogueado).getFirst();
-        incidencia.estadoIncidencia(EstadoIncidencia.RESUELTA);
+        incidencia.estadoIncidencia(EstadoIncidencia.RESUELTA); // La marcamos como resuelta
 
         assertDoesNotThrow(() -> sistema.borrarIncidencia(admin, incidencia));
         assertTrue(sistema.listarIncidenciasDeUsuario(usuarioLogueado).isEmpty());
     }
 
     @Test
-    @DirtiesContext
     void administradorPuedeCambiarEstadoIncidencia() {
         Usuario usuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa Usuario Test", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
         sistema.registrarUsuario(usuario);
-
         Usuario admin = sistema.iniciarSesion("admin", "admin1234").orElseThrow();
         sistema.addTipoIncidencia(new TipoIncidencia("Limpieza", "Suciedad"), admin);
-
         List<TipoIncidencia> tipos = sistema.listarTiposDeIncidencia();
         TipoIncidencia tipo = tipos.getFirst();
-
         Usuario usuarioLogueado = sistema.iniciarSesion("usuariotest", "usuariotest1234").orElseThrow();
         Incidencia nuevaIncidencia = new Incidencia();
         nuevaIncidencia.descripcion("Test");
@@ -205,10 +201,8 @@ class TestSistema {
         nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
         nuevaIncidencia.tipoIncidencia(tipo);
         sistema.crearIncidencia(nuevaIncidencia, usuarioLogueado);
-
         Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuarioLogueado).getFirst();
         int idIncidencia = incidencia.id();
-
         Incidencia paraModificar = new Incidencia();
         paraModificar.id(idIncidencia);
         paraModificar.estadoIncidencia(EstadoIncidencia.RESUELTA);
@@ -218,5 +212,37 @@ class TestSistema {
         List<Incidencia> incidenciasResueltas = sistema.buscarIncidencias(tipo, EstadoIncidencia.RESUELTA);
         assertEquals(1, incidenciasResueltas.size());
         assertEquals(idIncidencia, incidenciasResueltas.getFirst().id());
+    }
+
+    //Test para TipoIncidencia
+
+    @Test
+    void borrarTipoIncidenciaCorrectamente() {
+        Usuario admin = sistema.iniciarSesion("admin", "admin1234").orElseThrow();
+        TipoIncidencia tipoBorrable = new TipoIncidencia("Borrable", "Se puede borrar");
+        sistema.addTipoIncidencia(tipoBorrable, admin);
+
+        assertEquals(1, sistema.listarTiposDeIncidencia().size());
+        assertDoesNotThrow(() -> sistema.borrarTipoIncidencia(tipoBorrable, admin));
+        assertEquals(0, sistema.listarTiposDeIncidencia().size());
+    }
+
+    @Test
+    void borrarTipoIncidenciaLanzaExcepcionSiEstaEnUso() {
+        Usuario usuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
+        sistema.registrarUsuario(usuario);
+        Usuario admin = sistema.iniciarSesion("admin", "admin1234").orElseThrow();
+        TipoIncidencia tipoEnUso = new TipoIncidencia("EnUso", "No se puede borrar");
+        sistema.addTipoIncidencia(tipoEnUso, admin);
+        Usuario usuarioLogueado = sistema.iniciarSesion("usuariotest", "usuariotest1234").orElseThrow();
+        Incidencia nuevaIncidencia = new Incidencia();
+        nuevaIncidencia.descripcion("Test");
+        nuevaIncidencia.localizacion("Test");
+        nuevaIncidencia.tipoIncidencia(tipoEnUso);
+        sistema.crearIncidencia(nuevaIncidencia, usuarioLogueado);
+        assertThrows(TipoIncidenciaEnUso.class, () -> {
+            sistema.borrarTipoIncidencia(tipoEnUso, admin);
+        });
+        assertEquals(1, sistema.listarTiposDeIncidencia().size());
     }
 }
