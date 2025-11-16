@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Scanner;
 
 @Service
 @Validated
@@ -75,6 +76,20 @@ public class Sistema {
     @Transactional
     public void crearIncidencia(@Valid Incidencia nuevaIncidencia, @NotNull Usuario usuario) {
         if (usuario == null) throw new UsuarioNoLogeado();
+
+        List<Incidencia> similares = obtenerIncidenciasCercanas(nuevaIncidencia.localizacionGPS().y(), nuevaIncidencia.localizacionGPS().x());
+        if (!similares.isEmpty()) {
+            System.out.println("Se han encontrado incidencias similares cercanas:");
+            for (Incidencia inc : similares) {
+                System.out.println(" - " + inc);
+            }
+
+            boolean continuar = preguntarAlUsuario("¿Desea continuar con la creación de la incidencia? (S/N)");
+            if (!continuar) {
+                System.out.println("Registro cancelado por el usuario.");
+                return;
+            }
+        }
 
         Usuario usuarioAttached = repositorioUsuario.actualizar(usuario); // attach
         TipoIncidencia tipoAttached = repositorioTipo.buscar(nuevaIncidencia.tipoIncidencia().nombre())
@@ -176,5 +191,12 @@ public class Sistema {
                     return dist <= 10.0;
                 })
                 .toList();
+    }
+
+    private boolean preguntarAlUsuario(String mensaje) {
+        System.out.println(mensaje);
+        Scanner scanner = new Scanner(System.in);
+        String respuesta = scanner.nextLine().trim().toUpperCase();
+        return respuesta.equals("S") || respuesta.equals("SI");
     }
 }
