@@ -197,6 +197,6 @@ public class Sistema {
         System.out.println(mensaje);
         Scanner scanner = new Scanner(System.in);
         String respuesta = scanner.nextLine().trim().toUpperCase();
-        return respuesta.equals("S") || respuesta.equals("SI");
+        return respuesta.equals("S");
     }
 }
