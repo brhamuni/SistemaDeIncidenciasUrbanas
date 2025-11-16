@@ -12,7 +12,7 @@ public class DistanciaGeografica {
      * @param lon2 Longitud del segundo punto en grados
      * @return Distancia en metros
      */
-    public static double distanceInMeters(double lat1, double lon1, double lat2, double lon2) {
+    public static double distancia_dos_puntos(double lat1, double lon1, double lat2, double lon2) {
 
         double lat1Rad = Math.toRadians(lat1);
         double lon1Rad = Math.toRadians(lon1);

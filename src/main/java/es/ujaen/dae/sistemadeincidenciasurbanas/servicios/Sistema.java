@@ -3,6 +3,7 @@ package es.ujaen.dae.sistemadeincidenciasurbanas.servicios;
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.repositorios.*;
+import es.ujaen.dae.sistemadeincidenciasurbanas.util.DistanciaGeografica;
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -154,5 +155,26 @@ public class Sistema {
     @Transactional(readOnly = true)
     public List<TipoIncidencia> listarTiposDeIncidencia() {
         return repositorioTipo.listarTodos();
+    }
+
+    @Transactional
+    public List<Incidencia> obtenerIncidenciasCercanas(double lat, double lon) {
+
+        // Recupera solo las incidencias pendientes o en evaluación
+        List<Incidencia> candidatas = repositorioIncidencia.buscarPorEstados(
+                List.of(EstadoIncidencia.PENDIENTE, EstadoIncidencia.EN_EVALUACION)
+        );
+
+        // Filtra por distancia (<10 metros)
+        return candidatas.stream()
+                .filter(inc -> {
+                    double dist = DistanciaGeografica.distancia_dos_puntos(
+                            lat, lon,
+                            inc.localizacionGPS().y(),
+                            inc.localizacionGPS().x()
+                    );
+                    return dist <= 10.0;
+                })
+                .toList();
     }
 }
