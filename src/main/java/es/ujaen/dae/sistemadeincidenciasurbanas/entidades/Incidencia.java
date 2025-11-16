@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 @Entity
 @Table(name = "incidencias")
@@ -43,12 +42,18 @@ public class Incidencia {
     @JoinColumn(name = "tipo_incidencia_id")
     private TipoIncidencia tipoIncidencia;
 
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "foto")
+    private byte[] foto_incidencia;
+
     @Version
     private long version;
 
     public Incidencia() {}
 
-    public Incidencia(int id, LocalDateTime fecha, String descripcion, String localizacion, LocalizacionGPS localizacionGPS, Usuario usuario, TipoIncidencia tipoIncidencia) {
+    public Incidencia(int id, LocalDateTime fecha, String descripcion, String localizacion,
+                      LocalizacionGPS localizacionGPS, Usuario usuario, TipoIncidencia tipoIncidencia, byte[] foto) {
         this.id = id;
         this.fecha = fecha;
         this.descripcion = descripcion;
@@ -57,53 +62,30 @@ public class Incidencia {
         this.usuario = usuario;
         this.tipoIncidencia = tipoIncidencia;
         this.estadoIncidencia = EstadoIncidencia.PENDIENTE;
+        this.foto_incidencia = foto;
     }
 
-    public LocalDateTime fecha() {
-        return fecha;
-    }
-    public String descripcion() {
-        return descripcion;
-    }
-    public String localizacion() {
-        return localizacion;
-    }
-    public LocalizacionGPS localizacionGPS() {
-        return localizacionGPS;
-    }
-    public EstadoIncidencia estadoIncidencia() {
-        return estadoIncidencia;
-    }
-    public Usuario usuario() {
-        return usuario;
-    }
-    public TipoIncidencia tipoIncidencia() {
-        return tipoIncidencia;
-    }
-    public int id() {return id;}
+    // Métodos get
+    public int id() { return id; }
+    public LocalDateTime fecha() { return fecha; }
+    public String descripcion() { return descripcion; }
+    public String localizacion() { return localizacion; }
+    public LocalizacionGPS localizacionGPS() { return localizacionGPS; }
+    public EstadoIncidencia estadoIncidencia() { return estadoIncidencia; }
+    public Usuario usuario() { return usuario; }
+    public TipoIncidencia tipoIncidencia() { return tipoIncidencia; }
+    public byte[] foto() { return foto_incidencia; }     // ← FOTO
 
-    public void fecha(LocalDateTime fecha) {
-        this.fecha = fecha;
-    }
-    public void descripcion(String descripcion) {
-        this.descripcion = descripcion;
-    }
-    public void localizacion(String localizacion) {
-        this.localizacion = localizacion;
-    }
-    public void localizacionGPS(LocalizacionGPS localizacionGPS) {
-        this.localizacionGPS = localizacionGPS;
-    }
-    public void estadoIncidencia(EstadoIncidencia estadoIncidencia) {
-        this.estadoIncidencia = estadoIncidencia;
-    }
-    public void usuario(Usuario usuario) {
-        this.usuario = usuario;
-    }
-    public void tipoIncidencia(TipoIncidencia tipoIncidencia) {
-        this.tipoIncidencia = tipoIncidencia;
-    }
-    public void id(int id) {this.id = id;}
+    // Métodos set
+    public void id(int id) { this.id = id; }
+    public void fecha(LocalDateTime fecha) { this.fecha = fecha; }
+    public void descripcion(String descripcion) { this.descripcion = descripcion; }
+    public void localizacion(String localizacion) { this.localizacion = localizacion; }
+    public void localizacionGPS(LocalizacionGPS localizacionGPS) { this.localizacionGPS = localizacionGPS; }
+    public void estadoIncidencia(EstadoIncidencia estadoIncidencia) { this.estadoIncidencia = estadoIncidencia; }
+    public void usuario(Usuario usuario) { this.usuario = usuario; }
+    public void tipoIncidencia(TipoIncidencia tipoIncidencia) { this.tipoIncidencia = tipoIncidencia; }
+    public void foto(byte[] foto) { this.foto_incidencia = foto; }   // ← SET FOTO
 
     @Override
     public boolean equals(Object o) {
