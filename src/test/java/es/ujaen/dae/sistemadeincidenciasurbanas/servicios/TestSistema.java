@@ -2,13 +2,17 @@ package es.ujaen.dae.sistemadeincidenciasurbanas.servicios;
 
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.*;
+import es.ujaen.dae.sistemadeincidenciasurbanas.repositorios.RepositorioIncidencia;
 import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles; // <-- IMPORTANTE
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -244,5 +248,40 @@ class TestSistema {
             sistema.borrarTipoIncidencia(tipoEnUso, admin);
         });
         assertEquals(1, sistema.listarTiposDeIncidencia().size());
+    }
+
+    @Test
+    public void testGuardarIncidenciaConFoto() throws Exception {
+
+        Usuario usuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
+        sistema.registrarUsuario(usuario);
+
+        Usuario admin = sistema.iniciarSesion("admin", "admin1234").orElseThrow();
+        sistema.addTipoIncidencia(new TipoIncidencia("Limpieza", "Suciedad en la vía pública"), admin);
+
+        List<TipoIncidencia> tipos = sistema.listarTiposDeIncidencia();
+        TipoIncidencia tipo = tipos.getFirst();
+
+        Usuario usuarioLogueado = sistema.iniciarSesion("usuariotest", "usuariotest1234").orElseThrow();
+
+        Incidencia nuevaIncidencia = new Incidencia();
+        nuevaIncidencia.descripcion("Contenedor roto");
+        nuevaIncidencia.localizacion("Calle Mayor");
+        nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
+        nuevaIncidencia.tipoIncidencia(tipo);
+
+        Path imagen = Path.of("ClubDeSocios-Diagrama_de_Clases_Sistema_de_Incidencia.png");
+        byte[] contenidoImagen = Files.readAllBytes(imagen);
+        nuevaIncidencia.foto(contenidoImagen);
+
+        sistema.crearIncidencia(nuevaIncidencia, usuarioLogueado);
+
+        List<Incidencia> incidenciasUsuario = sistema.listarIncidenciasDeUsuario(usuarioLogueado);
+        assertEquals(1, incidenciasUsuario.size());
+
+        Incidencia creada = incidenciasUsuario.getFirst();
+
+        assertNotNull(creada.foto(), "La foto debe estar guardada en la incidencia");
+        assertArrayEquals(contenidoImagen, creada.foto(), "La foto guardada debe coincidir con la foto original");
     }
 }
