@@ -2,13 +2,18 @@ package es.ujaen.dae.sistemadeincidenciasurbanas.servicios;
 
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.*;
+import es.ujaen.dae.sistemadeincidenciasurbanas.repositorios.RepositorioIncidencia;
 import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles; // <-- IMPORTANTE
 
+import java.io.ByteArrayInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -237,12 +242,114 @@ class TestSistema {
         Usuario usuarioLogueado = sistema.iniciarSesion("usuariotest", "usuariotest1234").orElseThrow();
         Incidencia nuevaIncidencia = new Incidencia();
         nuevaIncidencia.descripcion("Test");
-        nuevaIncidencia.localizacion("Test");
+        nuevaIncidencia.localizacion("jaen");
+        nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
         nuevaIncidencia.tipoIncidencia(tipoEnUso);
         sistema.crearIncidencia(nuevaIncidencia, usuarioLogueado);
         assertThrows(TipoIncidenciaEnUso.class, () -> {
             sistema.borrarTipoIncidencia(tipoEnUso, admin);
         });
         assertEquals(1, sistema.listarTiposDeIncidencia().size());
+    }
+
+    @Test
+    public void guardarIncidenciaConFoto() throws Exception {
+
+        Usuario usuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
+        sistema.registrarUsuario(usuario);
+
+        Usuario admin = sistema.iniciarSesion("admin", "admin1234").orElseThrow();
+        sistema.addTipoIncidencia(new TipoIncidencia("Limpieza", "Suciedad en la vía pública"), admin);
+
+        List<TipoIncidencia> tipos = sistema.listarTiposDeIncidencia();
+        TipoIncidencia tipo = tipos.getFirst();
+
+        Usuario usuarioLogueado = sistema.iniciarSesion("usuariotest", "usuariotest1234").orElseThrow();
+
+        Incidencia nuevaIncidencia = new Incidencia();
+        nuevaIncidencia.descripcion("Contenedor roto");
+        nuevaIncidencia.localizacion("Calle Mayor");
+        nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10, 10));
+        nuevaIncidencia.tipoIncidencia(tipo);
+
+        Path imagen = Path.of("ClubDeSocios-Diagrama_de_Clases_Sistema_de_Incidencia.png");
+        byte[] contenidoImagen = Files.readAllBytes(imagen);
+        nuevaIncidencia.foto(contenidoImagen);
+
+        sistema.crearIncidencia(nuevaIncidencia, usuarioLogueado);
+
+        List<Incidencia> incidenciasUsuario = sistema.listarIncidenciasDeUsuario(usuarioLogueado);
+        assertEquals(1, incidenciasUsuario.size());
+
+        Incidencia creada = incidenciasUsuario.getFirst();
+
+        assertNotNull(creada.foto(), "La foto debe estar guardada en la incidencia");
+        assertArrayEquals(contenidoImagen, creada.foto(), "La foto guardada debe coincidir con la foto original");
+    }
+
+    @Test
+    public void incidenciaSimilaresUsuarioContinua(){
+        Usuario usuario = new Usuario("Continua", "Usuario", LocalDate.of(2004, 1, 1), "Casa", "600000001", "usuario2@test.com", "usuariocontinua", "usuariotest1234");
+        sistema.registrarUsuario(usuario);
+        Usuario usuarioLogueado = sistema.iniciarSesion("usuariocontinua", "usuariotest1234").orElseThrow();
+
+        Usuario admin = sistema.iniciarSesion("admin", "admin1234").orElseThrow();
+        sistema.addTipoIncidencia(new TipoIncidencia("Vandalismo", "Graffiti"), admin);
+
+        TipoIncidencia tipo = sistema.listarTiposDeIncidencia().getFirst();
+
+        Incidencia primera_incidencia = new Incidencia();
+        primera_incidencia.descripcion("Pintada en pared");
+        primera_incidencia.localizacion("Calle 1");
+        primera_incidencia.localizacionGPS(new LocalizacionGPS(10,10));
+        primera_incidencia.tipoIncidencia(tipo);
+        sistema.crearIncidencia(primera_incidencia, usuarioLogueado);
+
+        Incidencia segunda_incidencia = new Incidencia();
+        segunda_incidencia.descripcion("Otra pintada");
+        segunda_incidencia.localizacion("Calle 1");
+        segunda_incidencia.localizacionGPS(new LocalizacionGPS(10,10));
+        segunda_incidencia.tipoIncidencia(tipo);
+
+        String input = "S\n";
+        System.setIn(new ByteArrayInputStream(input.getBytes()));
+
+        sistema.crearIncidencia(segunda_incidencia, usuarioLogueado);
+
+        List<Incidencia> incidenciasUsuario = sistema.listarIncidenciasDeUsuario(usuarioLogueado);
+        assertEquals(2, incidenciasUsuario.size());
+    }
+
+    @Test
+    public void incidenciaSimilaresUsuarioNoContinua(){
+        Usuario usuario = new Usuario("NoContinua", "Usuario", LocalDate.of(2004, 1, 1), "Casa", "600000001", "usuario2@test.com", "usuarionocontinua", "usuariotest1234");
+        sistema.registrarUsuario(usuario);
+        Usuario usuarioLogueado = sistema.iniciarSesion("usuarionocontinua", "usuariotest1234").orElseThrow();
+
+        Usuario admin = sistema.iniciarSesion("admin", "admin1234").orElseThrow();
+        sistema.addTipoIncidencia(new TipoIncidencia("Vandalismo", "Graffiti"), admin);
+
+        TipoIncidencia tipo = sistema.listarTiposDeIncidencia().getFirst();
+
+        Incidencia primera_incidencia = new Incidencia();
+        primera_incidencia.descripcion("Pintada en pared");
+        primera_incidencia.localizacion("Calle 1");
+        primera_incidencia.localizacionGPS(new LocalizacionGPS(10,10));
+        primera_incidencia.tipoIncidencia(tipo);
+        sistema.crearIncidencia(primera_incidencia, usuarioLogueado);
+
+        Incidencia segunda_incidencia = new Incidencia();
+        segunda_incidencia.descripcion("Otra pintada");
+        segunda_incidencia.localizacion("Calle 1");
+        segunda_incidencia.localizacionGPS(new LocalizacionGPS(10,10));
+        segunda_incidencia.tipoIncidencia(tipo);
+
+        String input = "N\n";
+        System.setIn(new ByteArrayInputStream(input.getBytes()));
+
+        sistema.crearIncidencia(segunda_incidencia, usuarioLogueado);
+
+        List<Incidencia> incidenciasUsuario = sistema.listarIncidenciasDeUsuario(usuarioLogueado);
+        assertEquals(1, incidenciasUsuario.size());
     }
 }

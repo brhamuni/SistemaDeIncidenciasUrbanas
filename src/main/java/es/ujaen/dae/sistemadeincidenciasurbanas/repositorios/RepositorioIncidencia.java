@@ -4,6 +4,7 @@ import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.EstadoIncidencia;
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Incidencia;
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.TipoIncidencia;
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Usuario;
+import es.ujaen.dae.sistemadeincidenciasurbanas.util.DistanciaGeografica;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.cache.annotation.CacheEvict;
@@ -51,6 +52,11 @@ public class RepositorioIncidencia {
         return optIncidencia;
     }
 
+    @Transactional(readOnly = true)
+    public byte[] obtenerFoto(int id) {
+        return em.createQuery("SELECT i.foto_incidencia FROM Incidencia i WHERE i.id = :id", byte[].class).setParameter("id", id).getSingleResult();
+    }
+
     public List<Incidencia> buscarPorUsuario(Usuario usuario) {
         List<Incidencia> incidencias = em.createQuery("SELECT i FROM Incidencia i WHERE i.usuario = :usuario", Incidencia.class)
                 .setParameter("usuario", usuario)
@@ -95,5 +101,19 @@ public class RepositorioIncidencia {
                 .getSingleResult();
 
         return count > 0;
+    }
+
+    public List<Incidencia> buscarPorEstados(List<EstadoIncidencia> estados) {
+        List<Incidencia> incidencias = em.createQuery(
+                        "SELECT i FROM Incidencia i WHERE i.estadoIncidencia IN :estados", Incidencia.class)
+                .setParameter("estados", estados)
+                .getResultList();
+
+        incidencias.forEach(inc -> {
+            inc.usuario().login();
+            inc.tipoIncidencia().nombre();
+        });
+
+        return incidencias;
     }
 }

@@ -3,6 +3,7 @@ package es.ujaen.dae.sistemadeincidenciasurbanas.servicios;
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.repositorios.*;
+import es.ujaen.dae.sistemadeincidenciasurbanas.util.DistanciaGeografica;
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Scanner;
 
 @Service
 @Validated
@@ -74,6 +76,20 @@ public class Sistema {
     @Transactional
     public void crearIncidencia(@Valid Incidencia nuevaIncidencia, @NotNull Usuario usuario) {
         if (usuario == null) throw new UsuarioNoLogeado();
+
+        List<Incidencia> similares = obtenerIncidenciasCercanas(nuevaIncidencia.localizacionGPS().y(), nuevaIncidencia.localizacionGPS().x());
+        if (!similares.isEmpty()) {
+            System.out.println("Se han encontrado incidencias similares cercanas:");
+            for (Incidencia inc : similares) {
+                System.out.println(" - " + inc);
+            }
+
+            boolean continuar = preguntarAlUsuario("¿Desea continuar con la creación de la incidencia? (S/N)");
+            if (!continuar) {
+                System.out.println("Registro cancelado por el usuario.");
+                return;
+            }
+        }
 
         Usuario usuarioAttached = repositorioUsuario.actualizar(usuario); // attach
         TipoIncidencia tipoAttached = repositorioTipo.buscar(nuevaIncidencia.tipoIncidencia().nombre())
@@ -154,5 +170,33 @@ public class Sistema {
     @Transactional(readOnly = true)
     public List<TipoIncidencia> listarTiposDeIncidencia() {
         return repositorioTipo.listarTodos();
+    }
+
+    @Transactional
+    public List<Incidencia> obtenerIncidenciasCercanas(double lat, double lon) {
+
+        // Recupera solo las incidencias pendientes o en evaluación
+        List<Incidencia> candidatas = repositorioIncidencia.buscarPorEstados(
+                List.of(EstadoIncidencia.PENDIENTE, EstadoIncidencia.EN_EVALUACION)
+        );
+
+        // Filtra por distancia (<10 metros)
+        return candidatas.stream()
+                .filter(inc -> {
+                    double dist = DistanciaGeografica.distancia_dos_puntos(
+                            lat, lon,
+                            inc.localizacionGPS().y(),
+                            inc.localizacionGPS().x()
+                    );
+                    return dist <= 10.0;
+                })
+                .toList();
+    }
+
+    private boolean preguntarAlUsuario(String mensaje) {
+        System.out.println(mensaje);
+        Scanner scanner = new Scanner(System.in);
+        String respuesta = scanner.nextLine().trim().toUpperCase();
+        return respuesta.equals("S");
     }
 }
