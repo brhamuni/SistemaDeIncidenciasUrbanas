@@ -20,7 +20,6 @@ import java.util.Scanner;
 
 @Service
 @Validated
-@Transactional(rollbackFor = Exception.class)
 public class Sistema {
 
     @Autowired
@@ -46,7 +45,6 @@ public class Sistema {
                 });
     }
 
-    @Transactional
     public void registrarUsuario(@Valid Usuario nuevoUsuario) {
         if (repositorioUsuario.buscarPorLogin(nuevoUsuario.login()).isPresent()) {
             throw new UsuarioYaExiste();
@@ -54,12 +52,10 @@ public class Sistema {
         repositorioUsuario.guardar(nuevoUsuario);
     }
 
-    @Transactional(readOnly = true)
     public Optional<Usuario> iniciarSesion(@NotNull String login, @NotNull String clave) {
         return repositorioUsuario.buscarPorLoginYClaveAcceso(login, clave);
     }
 
-    @Transactional
     public void actualizarDatosUsuario(@Valid Usuario usuarioNuevo) {
         Usuario usuarioOriginal = repositorioUsuario.buscarPorLogin(usuarioNuevo.login())
                 .orElseThrow(UsuarioNoEncontrado::new);
@@ -113,7 +109,6 @@ public class Sistema {
         return repositorioIncidencia.buscarPorTipoYEstado(tipo, estado);
     }
 
-    @Transactional
     public void borrarIncidencia(@Valid Usuario usuario, @Valid Incidencia incidencia) {
         Incidencia inc = repositorioIncidencia.buscarPorId(incidencia.id())
                 .orElseThrow(IncidenciaNoExiste::new);
@@ -130,7 +125,6 @@ public class Sistema {
         }
     }
 
-    @Transactional
     public void modificarEstadoIncidencia(Incidencia incidenciaNuevoEstado, @Valid Usuario usuarioLogeado) {
         if (usuarioLogeado == null) throw new UsuarioNoLogeado();
         if (!esAdmin(usuarioLogeado)) throw new UsuarioNoAdmin();
@@ -139,6 +133,7 @@ public class Sistema {
                 .orElseThrow(IncidenciaNoExiste::new);
 
         inc.estadoIncidencia(incidenciaNuevoEstado.estadoIncidencia());
+
         repositorioIncidencia.actualizar(inc);
     }
 
@@ -146,7 +141,6 @@ public class Sistema {
         return usuario != null && usuario.login().equals(administrador.login());
     }
 
-    @Transactional
     public void addTipoIncidencia(@Valid TipoIncidencia nuevoTipo, @Valid Usuario usuarioLogeado) {
         if (usuarioLogeado == null) throw new UsuarioNoLogeado();
         if (!esAdmin(usuarioLogeado)) throw new UsuarioNoAdmin();
@@ -156,7 +150,6 @@ public class Sistema {
         repositorioTipo.guardar(nuevoTipo);
     }
 
-    @Transactional
     public void borrarTipoIncidencia(@Valid TipoIncidencia tipoIncidencia, @NotNull Usuario usuario) {
         if (!esAdmin(usuario)) throw new UsuarioNoAdmin();
 
@@ -172,7 +165,7 @@ public class Sistema {
         return repositorioTipo.listarTodos();
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<Incidencia> obtenerIncidenciasCercanas(double lat, double lon) {
 
         // Recupera solo las incidencias pendientes o en evaluación
