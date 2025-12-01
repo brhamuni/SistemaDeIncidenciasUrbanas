@@ -45,7 +45,7 @@ public class Incidencia {
     @Lob
     @Basic(fetch = FetchType.LAZY)
     @Column(name = "foto")
-    private byte[] foto_incidencia;
+    private byte[] fotoIncidencia;
 
     @Version
     private long version;
@@ -62,7 +62,7 @@ public class Incidencia {
         this.usuario = usuario;
         this.tipoIncidencia = tipoIncidencia;
         this.estadoIncidencia = EstadoIncidencia.PENDIENTE;
-        this.foto_incidencia = foto;
+        this.fotoIncidencia = foto;
     }
 
     // Métodos get
@@ -74,7 +74,7 @@ public class Incidencia {
     public EstadoIncidencia estadoIncidencia() { return estadoIncidencia; }
     public Usuario usuario() { return usuario; }
     public TipoIncidencia tipoIncidencia() { return tipoIncidencia; }
-    public byte[] foto() { return foto_incidencia; }     // ← FOTO
+    public byte[] foto() { return fotoIncidencia; }     // ← FOTO
 
     // Métodos set
     public void id(int id) { this.id = id; }
@@ -85,7 +85,7 @@ public class Incidencia {
     public void estadoIncidencia(EstadoIncidencia estadoIncidencia) { this.estadoIncidencia = estadoIncidencia; }
     public void usuario(Usuario usuario) { this.usuario = usuario; }
     public void tipoIncidencia(TipoIncidencia tipoIncidencia) { this.tipoIncidencia = tipoIncidencia; }
-    public void foto(byte[] foto) { this.foto_incidencia = foto; }   // ← SET FOTO
+    public void foto(byte[] foto) { this.fotoIncidencia = foto; }   // ← SET FOTO
 
     @Override
     public boolean equals(Object o) {
