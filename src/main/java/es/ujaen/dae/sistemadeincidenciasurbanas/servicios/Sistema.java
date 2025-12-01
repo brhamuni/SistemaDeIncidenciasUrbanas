@@ -56,6 +56,7 @@ public class Sistema {
         return repositorioUsuario.buscarPorLoginYClaveAcceso(login, clave);
     }
 
+    @Transactional
     public void actualizarDatosUsuario(@Valid Usuario usuarioNuevo) {
         Usuario usuarioOriginal = repositorioUsuario.buscarPorLogin(usuarioNuevo.login())
                 .orElseThrow(UsuarioNoEncontrado::new);
@@ -99,42 +100,38 @@ public class Sistema {
         repositorioIncidencia.guardar(nuevaIncidencia);
     }
 
-    @Transactional(readOnly = true)
     public List<Incidencia> listarIncidenciasDeUsuario(@Valid Usuario usuario) {
         return repositorioIncidencia.buscarPorUsuario(usuario);
     }
 
-    @Transactional(readOnly = true)
     public List<Incidencia> buscarIncidencias(TipoIncidencia tipo, EstadoIncidencia estado) {
         return repositorioIncidencia.buscarPorTipoYEstado(tipo, estado);
     }
 
     public void borrarIncidencia(@Valid Usuario usuario, @Valid Incidencia incidencia) {
-        Incidencia inc = repositorioIncidencia.buscarPorId(incidencia.id())
-                .orElseThrow(IncidenciaNoExiste::new);
+        if (incidencia.id() == 0) {
+            throw new IncidenciaNoExiste();
+        }
 
         if (esAdmin(usuario)) {
-            repositorioIncidencia.borrar(inc);
+            repositorioIncidencia.borrar(incidencia);
         } else {
-            if (!inc.usuario().equals(usuario))
+            if (!incidencia.usuario().equals(usuario))
                 throw new AccionNoAutorizada("No puedes borrar una incidencia que no es tuya");
-            if (inc.estadoIncidencia() != EstadoIncidencia.PENDIENTE)
+            if (incidencia.estadoIncidencia() != EstadoIncidencia.PENDIENTE)
                 throw new AccionNoAutorizada("Solo puedes borrar incidencias pendientes");
 
-            repositorioIncidencia.borrar(inc);
+            repositorioIncidencia.borrar(incidencia);
         }
     }
 
-    public void modificarEstadoIncidencia(Incidencia incidenciaNuevoEstado, @Valid Usuario usuarioLogeado) {
+    public void modificarEstadoIncidencia(Incidencia incidencia, EstadoIncidencia nuevoEstado, @Valid Usuario usuarioLogeado) {
         if (usuarioLogeado == null) throw new UsuarioNoLogeado();
         if (!esAdmin(usuarioLogeado)) throw new UsuarioNoAdmin();
+        if (incidencia == null) throw new IncidenciaNoExiste();
 
-        Incidencia inc = repositorioIncidencia.buscarPorId(incidenciaNuevoEstado.id())
-                .orElseThrow(IncidenciaNoExiste::new);
-
-        inc.estadoIncidencia(incidenciaNuevoEstado.estadoIncidencia());
-
-        repositorioIncidencia.actualizar(inc);
+        incidencia.estadoIncidencia(nuevoEstado);
+        repositorioIncidencia.actualizar(incidencia);
     }
 
     public boolean esAdmin(@Valid Usuario usuario) {
@@ -160,12 +157,10 @@ public class Sistema {
         repositorioTipo.borrar(tipoIncidencia);
     }
 
-    @Transactional(readOnly = true)
     public List<TipoIncidencia> listarTiposDeIncidencia() {
         return repositorioTipo.listarTodos();
     }
 
-    @Transactional(readOnly = true)
     public List<Incidencia> obtenerIncidenciasCercanas(double lat, double lon) {
 
         // Recupera solo las incidencias pendientes o en evaluación
