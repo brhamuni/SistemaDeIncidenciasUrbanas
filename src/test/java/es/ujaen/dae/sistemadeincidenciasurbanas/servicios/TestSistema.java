@@ -207,16 +207,12 @@ class TestSistema {
         nuevaIncidencia.tipoIncidencia(tipo);
         sistema.crearIncidencia(nuevaIncidencia, usuarioLogueado);
         Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuarioLogueado).getFirst();
-        int idIncidencia = incidencia.id();
-        Incidencia paraModificar = new Incidencia();
-        paraModificar.id(idIncidencia);
-        paraModificar.estadoIncidencia(EstadoIncidencia.RESUELTA);
-
-        sistema.modificarEstadoIncidencia(paraModificar, admin);
-
+    
+        sistema.modificarEstadoIncidencia(incidencia, EstadoIncidencia.RESUELTA, admin);
+    
         List<Incidencia> incidenciasResueltas = sistema.buscarIncidencias(tipo, EstadoIncidencia.RESUELTA);
         assertEquals(1, incidenciasResueltas.size());
-        assertEquals(idIncidencia, incidenciasResueltas.getFirst().id());
+        assertEquals(incidencia.id(), incidenciasResueltas.getFirst().id());
     }
 
     //Test para TipoIncidencia
