@@ -44,6 +44,7 @@ public class Sistema {
                 });
     }
 
+
     public void registrarUsuario(@Valid Usuario nuevoUsuario) {
         if (repositorioUsuario.buscarPorLogin(nuevoUsuario.login()).isPresent()) {
             throw new UsuarioYaExiste();
@@ -55,7 +56,6 @@ public class Sistema {
         return repositorioUsuario.buscarPorLoginYClaveAcceso(login, clave);
     }
 
-    @Transactional
     public void actualizarDatosUsuario(@Valid Usuario usuarioNuevo) {
         Usuario usuarioOriginal = repositorioUsuario.buscarPorLogin(usuarioNuevo.login())
                 .orElseThrow(UsuarioNoEncontrado::new);
@@ -69,7 +69,6 @@ public class Sistema {
         repositorioUsuario.actualizar(usuarioOriginal);
     }
 
-    @Transactional
     public void crearIncidencia(@Valid Incidencia nuevaIncidencia, @NotNull Usuario usuario) {
         if (usuario == null) throw new UsuarioNoLogeado();
 
