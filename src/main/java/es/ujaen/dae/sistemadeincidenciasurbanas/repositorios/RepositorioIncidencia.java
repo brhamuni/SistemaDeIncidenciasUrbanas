@@ -54,7 +54,7 @@ public class RepositorioIncidencia {
 
     @Transactional(readOnly = true)
     public byte[] obtenerFoto(int id) {
-        return em.createQuery("SELECT i.foto_incidencia FROM Incidencia i WHERE i.id = :id", byte[].class).setParameter("id", id).getSingleResult();
+        return em.createQuery("SELECT i.foto FROM Incidencia i WHERE i.id = :id", byte[].class).setParameter("id", id).getSingleResult();
     }
 
     public List<Incidencia> buscarPorUsuario(Usuario usuario) {

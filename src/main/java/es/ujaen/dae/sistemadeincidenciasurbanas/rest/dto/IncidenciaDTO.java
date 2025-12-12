@@ -13,5 +13,6 @@ public record IncidenciaDTO(
         EstadoIncidencia estado,
         LocalDateTime fecha,
         String tipo,
+        String usuario,
         String nombreUsuario
 ) {}

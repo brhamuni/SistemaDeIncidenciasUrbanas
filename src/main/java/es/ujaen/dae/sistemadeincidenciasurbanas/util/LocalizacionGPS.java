@@ -6,19 +6,19 @@ import jakarta.persistence.Column;
 @Embeddable
 public class LocalizacionGPS {
     @Column(name = "gps_x")
-    private int x;
+    private double x;
 
     @Column(name = "gps_y")
-    private int y;
+    private double y;
 
     public LocalizacionGPS() {}
 
-    public LocalizacionGPS(int x, int y) {
+    public LocalizacionGPS(double x, double y) {
         this.x = x;
         this.y = y;
     }
 
-    public int x() {
+    public double x() {
         return x;
     }
 
@@ -26,7 +26,7 @@ public class LocalizacionGPS {
         this.x = x;
     }
 
-    public int y() {
+    public double y() {
         return y;
     }
 

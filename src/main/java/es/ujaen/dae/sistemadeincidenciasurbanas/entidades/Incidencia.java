@@ -52,17 +52,30 @@ public class Incidencia {
 
     public Incidencia() {}
 
-    public Incidencia(int id, LocalDateTime fecha, String descripcion, String localizacion,
-                      LocalizacionGPS localizacionGPS, Usuario usuario, TipoIncidencia tipoIncidencia, byte[] foto) {
+    public Incidencia(int id, String descripcion, Usuario usuario, TipoIncidencia tipoIncidencia,
+                      String localizacion, LocalizacionGPS gps, LocalDateTime fecha,
+                      EstadoIncidencia estadoIncidencia) {
         this.id = id;
-        this.fecha = fecha;
         this.descripcion = descripcion;
-        this.localizacion = localizacion;
-        this.localizacionGPS = localizacionGPS;
         this.usuario = usuario;
         this.tipoIncidencia = tipoIncidencia;
-        this.estadoIncidencia = EstadoIncidencia.PENDIENTE;
-        this.foto = foto;
+        this.localizacion = localizacion;
+        this.localizacionGPS = gps;
+        this.fecha = fecha;
+        this.estadoIncidencia = estadoIncidencia;
+    }
+
+
+    public Incidencia(String descripcion, Usuario usuario, TipoIncidencia tipoIncidencia,
+                      String localizacion, LocalizacionGPS gps, LocalDateTime fecha,
+                      EstadoIncidencia estadoIncidencia) {
+        this.descripcion = descripcion;
+        this.usuario = usuario;
+        this.tipoIncidencia = tipoIncidencia;
+        this.localizacion = localizacion;
+        this.localizacionGPS = gps;
+        this.fecha = fecha;
+        this.estadoIncidencia = estadoIncidencia;
     }
 
     // Métodos get
