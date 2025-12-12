@@ -2,14 +2,15 @@ package es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto;
 
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.EstadoIncidencia;
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Incidencia;
+import es.ujaen.dae.sistemadeincidenciasurbanas.seguridad.ServicioSeguridad;
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.TipoIncidencia;
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Usuario;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.UsuarioNoLogeado;
 import es.ujaen.dae.sistemadeincidenciasurbanas.repositorios.RepositorioTipoIncidencia;
 import es.ujaen.dae.sistemadeincidenciasurbanas.repositorios.RepositorioUsuario;
-import es.ujaen.dae.sistemadeincidenciasurbanas.seguridad.ServicioCredencialesUsuario;
 import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,7 +24,7 @@ public class Mapeador {
     RepositorioUsuario repositorioUsuario;
 
     @Autowired
-    ServicioCredencialesUsuario servicioCredencialesUsuario;
+    PasswordEncoder passwordEncoder;
 
     // ----------
     // Usuarios
@@ -68,7 +69,7 @@ public class Mapeador {
                 usuarioDTO.telefono(),
                 usuarioDTO.email(),
                 usuarioDTO.login(),
-                servicioCredencialesUsuario.encode(usuarioDTO.clave())
+                passwordEncoder.encode(usuarioDTO.clave())
         );
     }
 

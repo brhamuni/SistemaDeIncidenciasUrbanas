@@ -2,20 +2,18 @@ package es.ujaen.dae.sistemadeincidenciasurbanas.servicios;
 
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.*;
-import es.ujaen.dae.sistemadeincidenciasurbanas.repositorios.RepositorioIncidencia;
 import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles; // <-- IMPORTANTE
+import org.springframework.test.context.ActiveProfiles;
 
 import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
