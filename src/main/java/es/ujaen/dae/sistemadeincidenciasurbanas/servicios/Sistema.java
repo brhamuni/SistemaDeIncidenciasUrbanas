@@ -52,6 +52,11 @@ public class Sistema {
         repositorioUsuario.guardar(nuevoUsuario);
     }
 
+    public Optional<Usuario> buscarUsuario(String login) {
+        return repositorioUsuario.buscarPorLogin(login);
+    }
+
+
     public Optional<Usuario> iniciarSesion(@NotNull String login, @NotNull String clave) {
         return repositorioUsuario.buscarPorLoginYClaveAcceso(login, clave);
     }

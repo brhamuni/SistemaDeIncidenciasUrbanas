@@ -1,4 +1,4 @@
-package es.ujaen.dae.sistemadeincidenciasurbanas.seguridad;
+package es.ujaen.dae.sistemadeincidenciasurbanas.util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import javax.crypto.SecretKey;
@@ -14,7 +14,6 @@ public class UtilJwt {
     public static String crearToken(String usuario, Map<String, ?> claims, int tiempoExpiracion) {
 
         var ahora = LocalDateTime.now().atZone(ZoneId.systemDefault());
-
         return Jwts.builder().claims(claims).subject(usuario).expiration(Date.from(ahora.plusMinutes(tiempoExpiracion).toInstant())).signWith(claveFirmadoTokens).compact();
     }
 

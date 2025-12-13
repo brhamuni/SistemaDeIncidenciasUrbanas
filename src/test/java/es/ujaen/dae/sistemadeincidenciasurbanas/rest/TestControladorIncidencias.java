@@ -1,26 +1,38 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.rest;
 
+import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Usuario;
+import es.ujaen.dae.sistemadeincidenciasurbanas.repositorios.RepositorioUsuario;
 import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.DAutenticacionUsuario;
+import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.UsuarioDTO;
+import es.ujaen.dae.sistemadeincidenciasurbanas.servicios.Sistema;
 import jakarta.annotation.PostConstruct;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
-import org.springframework.test.annotation.DirtiesContext;
+
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.time.LocalDate;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
 
 @SpringBootTest(classes = es.ujaen.dae.sistemadeincidenciasurbanas.SistemaDeIncidenciasUrbanasApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles(profiles = {"test"})
 public class TestControladorIncidencias {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private Sistema sistema;
+
+    @LocalServerPort
+    int localPort;
+
+    TestRestTemplate restTemplate;
 
     static HttpHeaders headerAutorizacion(String token) {
         HttpHeaders headers = new HttpHeaders();
@@ -28,13 +40,34 @@ public class TestControladorIncidencias {
         return headers;
     }
 
+    @PostConstruct
+    void crearRestTemplate() {
+        var builder = new RestTemplateBuilder().rootUri("http://localhost:" + localPort);
+        restTemplate = new TestRestTemplate(builder);
+    }
+
+
     /**
      * Test para verificar que el acceso sin token es rechazado.
      */
     @Test
-    public void testAccesoSinToken_DebeFallar() {
-        ResponseEntity<String> respuesta = restTemplate.getForEntity("/incidencias", String.class);
-        assertEquals(HttpStatus.FORBIDDEN, respuesta.getStatusCode());
+    void testAccesoSinToken() {
+        var respuesta = restTemplate.getForEntity("/incidencias", String.class);
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void testLoginCorrecto() {
+        var nuevoUsuario = new UsuarioDTO("usuariotest", "Usuario", "Test","usuario@test.com", "600000000","Casa Usuario Test","usuariotest1234");
+
+        var respuesta = restTemplate.postForEntity(
+                "/auth/login",
+                nuevoUsuario,
+                Void.class
+        );
+
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.OK);
+
     }
 
 }
