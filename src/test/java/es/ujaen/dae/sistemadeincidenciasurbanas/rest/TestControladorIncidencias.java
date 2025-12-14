@@ -1,6 +1,6 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.rest;
 
-import es.ujaen.dae.sistemadeincidenciasurbanas.app.SistemaDeIncidenciasUrbanasApplication;
+import es.ujaen.dae.sistemadeincidenciasurbanas.SistemaDeIncidenciasUrbanasApplication;
 import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.DUsuario;
 import es.ujaen.dae.sistemadeincidenciasurbanas.servicios.Sistema;
 import jakarta.annotation.PostConstruct;
@@ -14,6 +14,8 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 
 import org.springframework.test.context.ActiveProfiles;
+
+import java.time.LocalDate;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -38,32 +40,65 @@ public class TestControladorIncidencias {
 
     @PostConstruct
     void crearRestTemplate() {
-        var builder = new RestTemplateBuilder().rootUri("http://localhost:" + localPort);
+        var builder = new RestTemplateBuilder().rootUri("http://localhost:" + localPort + "/incidencias");
         restTemplate = new TestRestTemplate(builder);
     }
 
 
     /**
-     * Test para verificar que el acceso sin token es rechazado.
+     * Intento de creación de un cliente inválido
      */
     @Test
-    void testAccesoSinToken() {
-        var respuesta = restTemplate.getForEntity("/incidencias", String.class);
-        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-    }
+    public void testNuevoClienteInvalido() {
 
-    @Test
-    void testLoginCorrecto() {
-        var nuevoUsuario = new DUsuario("usuariotest", "Usuario", "Test","usuario@test.com", "600000000","Casa Usuario Test","usuariotest1234");
-
+        var usuario = new DUsuario("PedroBenito123", "miClAvE","pedrobeni1gmail.com", "Pedro","Benito", LocalDate.of(2000, 1, 1),"Jaén Jaén","6115577" );
         var respuesta = restTemplate.postForEntity(
-                "/auth/login",
-                nuevoUsuario,
+                "/usuarios",
+                usuario,
                 Void.class
         );
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+    }
 
-        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.OK);
+    /**
+     * Intento de creación de un cliente inválido
+     */
+    @Test
+    public void testNuevoClienteValido() {
+
+        var usuario = new DUsuario("PedroBenito123", "miClAvE","pedrobeni1@gmail.com", "Pedro","Benito", LocalDate.of(2000, 1, 1),"Jaén Jaén","611225577" );
+        var respuesta = restTemplate.postForEntity(
+                "/usuarios",
+                usuario,
+                Void.class
+        );
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
+    /**
+     * Intento de creación de un cliente duplicado
+     */
+    @Test
+    public void testClienteDuplicado() {
+
+        var usuario = new DUsuario("PedroBenito123", "miClAvE","pedrobeni1@gmail.com", "Pedro","Benito", LocalDate.of(2000, 1, 1),"Jaén Jaén","611225577" );
+        var respuesta = restTemplate.postForEntity(
+                "/usuarios",
+                usuario,
+                Void.class
+        );
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        respuesta = restTemplate.postForEntity(
+                "/usuarios",
+                usuario,
+                Void.class
+        );
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
 
     }
+
+
+
 
 }

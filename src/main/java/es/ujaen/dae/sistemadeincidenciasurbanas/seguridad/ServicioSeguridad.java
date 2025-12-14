@@ -30,7 +30,10 @@ public class ServicioSeguridad {
                 .sessionManagement(session -> session.disable())
                 .addFilterAfter(new FiltroAutenticacionJwt(), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(request -> request
-                        .anyRequest().permitAll()
+                        .requestMatchers(HttpMethod.GET, "/incidencias/usuarios/{login}")
+                            .access(new WebExpressionAuthorizationManager("hasRole('ADMIN') or (hasRole('USER') and #login == principal)"))
+                        .requestMatchers("/incidencias/**").permitAll()
+
                 )
                 .build();
     }

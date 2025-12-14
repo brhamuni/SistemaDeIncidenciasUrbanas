@@ -7,6 +7,7 @@ import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.UsuarioYaExiste;
 import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.DIncidencia;
 import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.DUsuario;
 import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.Mapeador;
+import es.ujaen.dae.sistemadeincidenciasurbanas.seguridad.ServicioCredencialesUsuario;
 import es.ujaen.dae.sistemadeincidenciasurbanas.servicios.Sistema;
 import jakarta.validation.ConstraintViolationException;
 import java.security.Principal;
@@ -25,12 +26,15 @@ public class ControladorIncidencias {
     @Autowired
     Sistema sistema;
 
+    @Autowired
+    ServicioCredencialesUsuario servicioCredencialesUsuario;
+
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     @ExceptionHandler(ConstraintViolationException.class)
     public void mapeadoExcepcionConstraintViolationException() {}
 
     @PostMapping("/usuarios")
-    public ResponseEntity<Void> registrarUsuario(@RequestBody DUsuario usuario) {
+    public ResponseEntity<Void> nuevoCliente(@RequestBody DUsuario usuario) {
         try {
             sistema.registrarUsuario(mapeador.entidadNueva(usuario));
         }
@@ -41,8 +45,9 @@ public class ControladorIncidencias {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+
     @GetMapping("/usuarios/{login}")
-    public ResponseEntity<DUsuario> obtenerUsuario(@PathVariable String login) {
+    public ResponseEntity<DUsuario> obtenerCliente(@PathVariable String login) {
         try {
             Usuario usuario = sistema.buscarUsuario(login).orElseThrow(UsuarioNoEncontrado::new);
             return ResponseEntity.ok(mapeador.dto(usuario));
@@ -52,15 +57,15 @@ public class ControladorIncidencias {
         }
     }
 
+
     @PostMapping
-    public ResponseEntity<DIncidencia> crearIncidencia(@RequestBody DIncidencia dIncidencia, Principal usuarioAutenticado) {
+    public ResponseEntity<DIncidencia> crearIncidencia(@RequestBody DIncidencia incidencia, Principal usuarioAutenticado) {
         try {
             Usuario usuario = sistema.buscarUsuario(usuarioAutenticado.getName()).orElseThrow(UsuarioNoEncontrado::new);
-            Incidencia incidencia = mapeador.entidadNueva(dIncidencia);
+            Incidencia incidenciaCreada = mapeador.entidadNueva(incidencia);
 
-            sistema.crearIncidencia(incidencia, usuario);
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(mapeador.dto(incidencia));
+            sistema.crearIncidencia(incidenciaCreada, usuario);
+            return ResponseEntity.status(HttpStatus.CREATED).body(mapeador.dto(incidenciaCreada));
         }
         catch(UsuarioNoEncontrado e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
