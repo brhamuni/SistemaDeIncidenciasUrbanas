@@ -1,10 +1,6 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto;
 
-import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.EstadoIncidencia;
-import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Incidencia;
-import es.ujaen.dae.sistemadeincidenciasurbanas.seguridad.ServicioSeguridad;
-import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.TipoIncidencia;
-import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Usuario;
+import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.*;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.UsuarioNoLogeado;
 import es.ujaen.dae.sistemadeincidenciasurbanas.repositorios.RepositorioTipoIncidencia;
 import es.ujaen.dae.sistemadeincidenciasurbanas.repositorios.RepositorioUsuario;
@@ -12,142 +8,129 @@ import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 
 @Service
 public class Mapeador {
-    @Autowired
-    RepositorioTipoIncidencia repositorioTipoIncidencia;
 
     @Autowired
     RepositorioUsuario repositorioUsuario;
 
     @Autowired
-    PasswordEncoder passwordEncoder;
+    RepositorioTipoIncidencia repositorioTipoIncidencia;
 
-    // ----------
-    // Usuarios
-    // ----------
+    @Autowired
+    PasswordEncoder codificadorClaves;
 
-    /**
-     * Entidad a DTO
-     * @param usuario
-     * @return
-     */
-    public UsuarioDTO dto(Usuario usuario) {
-        return new UsuarioDTO(
+    public DUsuario dto(Usuario usuario) {
+        return new DUsuario(
                 usuario.login(),
+                "",
+                usuario.email(),
                 usuario.nombre(),
                 usuario.apellidos(),
-                usuario.email(),
-                usuario.telefono(),
+                usuario.fechaNacimiento(),
                 usuario.direccion(),
-                "" // Clave vacía por seguridad
+                usuario.telefono()
         );
     }
 
-    public Usuario entidad(UsuarioDTO usuarioDTO) {
+    public Usuario entidad(DUsuario dUsuario) {
         return new Usuario(
-                usuarioDTO.nombre(),
-                usuarioDTO.apellidos(),
-                null,
-                usuarioDTO.direccion(),
-                usuarioDTO.telefono(),
-                usuarioDTO.email(),
-                usuarioDTO.login(),
-                usuarioDTO.clave()
+                dUsuario.apellidos(),
+                dUsuario.nombre(),
+                dUsuario.fechaNacimiento(),
+                dUsuario.direccion(),
+                dUsuario.telefono(),
+                dUsuario.email(),
+                dUsuario.login(),
+                dUsuario.claveAcceso()
         );
     }
 
-    public Usuario entidadNueva(UsuarioDTO usuarioDTO) {
+    public Usuario entidadNueva(DUsuario dUsuario) {
         return new Usuario(
-                usuarioDTO.nombre(),
-                usuarioDTO.apellidos(),
-                null,
-                usuarioDTO.direccion(),
-                usuarioDTO.telefono(),
-                usuarioDTO.email(),
-                usuarioDTO.login(),
-                passwordEncoder.encode(usuarioDTO.clave())
+                dUsuario.apellidos(),
+                dUsuario.nombre(),
+                dUsuario.fechaNacimiento(),
+                dUsuario.direccion(),
+                dUsuario.telefono(),
+                dUsuario.email(),
+                dUsuario.login(),
+                codificadorClaves.encode(dUsuario.claveAcceso())
         );
     }
 
-    // ----------
-    // Incidencias
-    // ----------
-
-    public IncidenciaDTO dto(Incidencia incidencia) {
-        return new IncidenciaDTO(
+    public DIncidencia dto(Incidencia incidencia) {
+        return new DIncidencia(
                 incidencia.id(),
+                incidencia.fecha(),
                 incidencia.descripcion(),
                 incidencia.localizacion(),
-                incidencia.localizacionGPS().x(),
-                incidencia.localizacionGPS().y(),
+                incidencia.localizacionGPS(),
                 incidencia.estadoIncidencia(),
-                incidencia.fecha(),
-                incidencia.tipoIncidencia().nombre(),
-                incidencia.usuario().login(),
-                incidencia.usuario().nombre() + " " + incidencia.usuario().apellidos()
+                incidencia.usuario(),
+                incidencia.tipoIncidencia(),
+                incidencia.foto()
         );
     }
 
-    public Incidencia entidad(IncidenciaDTO incidenciaDTO) {
-        Usuario usuario = repositorioUsuario.buscarPorLogin(incidenciaDTO.usuario())
+    public Incidencia entidad(DIncidencia dIncidencia) {
+        Usuario usuario = repositorioUsuario.buscarPorLogin(dIncidencia.usuario().login())
                 .orElseThrow(UsuarioNoLogeado::new);
 
-        TipoIncidencia tipo = repositorioTipoIncidencia.buscar(incidenciaDTO.tipo())
+        TipoIncidencia tipo = repositorioTipoIncidencia.buscar(dIncidencia.tipoIncidencia().nombre())
                 .orElseThrow(() -> new IllegalArgumentException("Tipo desconocido"));
 
         return new Incidencia(
-                incidenciaDTO.id(),
-                incidenciaDTO.descripcion(),
+                dIncidencia.id(),
+                dIncidencia.descripcion(),
                 usuario,
                 tipo,
-                incidenciaDTO.localizacion(),
-                new LocalizacionGPS(incidenciaDTO.latitud(), incidenciaDTO.longitud()),
-                incidenciaDTO.fecha(),
-                incidenciaDTO.estado()
+                dIncidencia.localizacion(),
+                dIncidencia.localizacionGPS(),
+                dIncidencia.fecha(),
+                dIncidencia.estadoIncidencia()
         );
     }
 
-    public Incidencia entidadNueva(IncidenciaDTO incidenciaDTO) {
-        Usuario usuario = repositorioUsuario.buscarPorLogin(incidenciaDTO.usuario())
+    public Incidencia entidadNueva(DIncidencia dIncidencia) {
+        Usuario usuario = repositorioUsuario.buscarPorLogin(dIncidencia.usuario().login())
                 .orElseThrow(UsuarioNoLogeado::new);
 
-        TipoIncidencia tipo = repositorioTipoIncidencia.buscar(incidenciaDTO.tipo())
+        TipoIncidencia tipo = repositorioTipoIncidencia.buscar(dIncidencia.tipoIncidencia().nombre())
                 .orElseThrow(() -> new IllegalArgumentException("Tipo desconocido"));
 
         return new Incidencia(
-                incidenciaDTO.descripcion(),
+                dIncidencia.descripcion(),
                 usuario,
                 tipo,
-                incidenciaDTO.localizacion(),
-                new LocalizacionGPS(incidenciaDTO.latitud(), incidenciaDTO.longitud()),
-                LocalDateTime.now(),
-                EstadoIncidencia.PENDIENTE
+                dIncidencia.localizacion(),
+                dIncidencia.localizacionGPS(),
+                dIncidencia.fecha(),
+                dIncidencia.estadoIncidencia()
         );
     }
 
-    // ----------
-    // Tipos de incidencia
-    // ----------
-
-    public TipoIncidenciaDTO dto(TipoIncidencia tipo) {
-        return new TipoIncidenciaDTO(tipo.nombre(), tipo.descripcion());
+    public DTipoIncidencia dto(TipoIncidencia tipoIncidencia) {
+        return new DTipoIncidencia(
+                tipoIncidencia.nombre(),
+                tipoIncidencia.descripcion()
+        );
     }
 
-    public TipoIncidencia entidadNueva(TipoIncidenciaDTO tipoIncidenciaDTO) {
+    public TipoIncidencia entidad(DTipoIncidencia dTipoIncidencia) {
         return new TipoIncidencia(
-                tipoIncidenciaDTO.nombre(),
-                tipoIncidenciaDTO.descripcion()
+                dTipoIncidencia.nombre(),
+                dTipoIncidencia.descripcion()
         );
     }
 
-    public TipoIncidencia entidad(TipoIncidenciaDTO tipoIncidenciaDTO) {
+    public TipoIncidencia entidadNueva(DTipoIncidencia dTipoIncidencia) {
         return new TipoIncidencia(
-                tipoIncidenciaDTO.nombre(),
-                tipoIncidenciaDTO.descripcion()
+                dTipoIncidencia.nombre(),
+                dTipoIncidencia.descripcion()
         );
     }
+
 }

@@ -8,7 +8,6 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "incidencias")
 public class Incidencia {
 
     @Id
@@ -50,7 +49,9 @@ public class Incidencia {
     @Version
     private long version;
 
-    public Incidencia() {}
+    public Incidencia() {
+
+    }
 
     public Incidencia(int id, String descripcion, Usuario usuario, TipoIncidencia tipoIncidencia,
                       String localizacion, LocalizacionGPS gps, LocalDateTime fecha,
@@ -69,13 +70,7 @@ public class Incidencia {
     public Incidencia(String descripcion, Usuario usuario, TipoIncidencia tipoIncidencia,
                       String localizacion, LocalizacionGPS gps, LocalDateTime fecha,
                       EstadoIncidencia estadoIncidencia) {
-        this.descripcion = descripcion;
-        this.usuario = usuario;
-        this.tipoIncidencia = tipoIncidencia;
-        this.localizacion = localizacion;
-        this.localizacionGPS = gps;
-        this.fecha = fecha;
-        this.estadoIncidencia = estadoIncidencia;
+        this(0,descripcion,usuario,tipoIncidencia,localizacion,gps,fecha,estadoIncidencia);
     }
 
     // Métodos get

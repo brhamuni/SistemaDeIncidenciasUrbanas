@@ -28,18 +28,18 @@ public class TipoIncidencia {
         this.descripcion = descripcion;
     }
 
+    //Metodos Get
     public String nombre() {
         return nombre;
     }
-
-    public void nombre(String nombre) {
-        this.nombre = nombre;
-    }
-
     public String descripcion() {
         return descripcion;
     }
 
+    //Metodos Set
+    public void nombre(String nombre) {
+        this.nombre = nombre;
+    }
     public void descripcion(String descripcion) {
         this.descripcion = descripcion;
     }
