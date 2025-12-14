@@ -1,4 +1,4 @@
-package es.ujaen.dae.sistemadeincidenciasurbanas.app;
+package es.ujaen.dae.sistemadeincidenciasurbanas;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
