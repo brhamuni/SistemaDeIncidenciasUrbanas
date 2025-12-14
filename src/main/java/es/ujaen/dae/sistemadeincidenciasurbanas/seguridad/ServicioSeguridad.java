@@ -32,6 +32,7 @@ public class ServicioSeguridad {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.GET, "/incidencias/usuarios/{login}")
                             .access(new WebExpressionAuthorizationManager("hasRole('ADMIN') or (hasRole('USER') and #login == principal)"))
+                        .requestMatchers("/incidencias/tipos/**").hasRole("ADMIN")
                         .requestMatchers("/incidencias/**").permitAll()
 
                 )

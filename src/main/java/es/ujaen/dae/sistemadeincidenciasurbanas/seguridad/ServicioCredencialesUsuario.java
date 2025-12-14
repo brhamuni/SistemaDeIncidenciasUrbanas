@@ -20,7 +20,7 @@ public class ServicioCredencialesUsuario implements UserDetailsService {
     public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
         Usuario usuario = sistema.buscarUsuario(login).orElseThrow(() -> new UsernameNotFoundException(""));
 
-        return User.withUsername(usuario.email())
+        return User.withUsername(usuario.login())
                 .password(usuario.claveAcceso())
                 .roles(usuario.login().equals("admin") ? "ADMIN": "USER")
                 .build();

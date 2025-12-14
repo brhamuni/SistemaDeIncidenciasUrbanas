@@ -1,10 +1,12 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.rest;
 
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Incidencia;
+import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.TipoIncidencia;
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Usuario;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.UsuarioNoEncontrado;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.UsuarioYaExiste;
 import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.DIncidencia;
+import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.DTipoIncidencia;
 import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.DUsuario;
 import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.Mapeador;
 import es.ujaen.dae.sistemadeincidenciasurbanas.seguridad.ServicioCredencialesUsuario;
@@ -15,6 +17,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -87,4 +90,15 @@ public class ControladorIncidencias {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
+
+    @PostMapping("/tipos")
+    public ResponseEntity<Void> crearTipo(@RequestBody DTipoIncidencia dTipo,@AuthenticationPrincipal Usuario usuarioAutenticado) {
+        System.out.println(">>> ENDPOINT crearTipo LLAMADO");
+        System.out.println(">>> Usuario autenticado: " + usuarioAutenticado);
+
+        TipoIncidencia nuevoTipo = mapeador.entidadNueva(dTipo);
+        sistema.addTipoIncidencia(nuevoTipo,usuarioAutenticado);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
 }

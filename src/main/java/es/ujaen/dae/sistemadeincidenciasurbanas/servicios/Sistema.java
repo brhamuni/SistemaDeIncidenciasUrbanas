@@ -31,8 +31,8 @@ public class Sistema {
     private RepositorioTipoIncidencia repositorioTipo;
 
     private static final Administrador administrador = new Administrador(
-            "del Sistema", "Administrador", LocalDate.of(2000, 1, 1),
-            "N/A", "600000000", "admin@sistema.com", "admin", "admin1234"
+            "Administrador", "Administrador", LocalDate.of(2000, 1, 1),
+            "N/A", "600000000", "admin@ujaen.es", "admin", "$2a$10$8CjaO.y0yCvi.HynDNAgZe2chWO3S2oOkQzwuQLCSVi1Jg4J7dlme"
     );
 
     @PostConstruct
