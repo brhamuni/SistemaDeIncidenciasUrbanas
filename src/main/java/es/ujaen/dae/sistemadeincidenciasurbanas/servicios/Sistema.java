@@ -1,21 +1,34 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.servicios;
 
-import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.*;
-import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.*;
-import es.ujaen.dae.sistemadeincidenciasurbanas.repositorios.*;
-import es.ujaen.dae.sistemadeincidenciasurbanas.util.DistanciaGeografica;
-import jakarta.annotation.PostConstruct;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.annotation.Validated;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
+
+import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Administrador;
+import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.EstadoIncidencia;
+import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Incidencia;
+import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.TipoIncidencia;
+import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Usuario;
+import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.AccionNoAutorizada;
+import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.IncidenciaNoExiste;
+import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.TipoIncidenciaEnUso;
+import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.TipoIncidenciaYaExiste;
+import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.UsuarioNoAdmin;
+import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.UsuarioNoEncontrado;
+import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.UsuarioNoLogeado;
+import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.UsuarioYaExiste;
+import es.ujaen.dae.sistemadeincidenciasurbanas.repositorios.RepositorioIncidencia;
+import es.ujaen.dae.sistemadeincidenciasurbanas.repositorios.RepositorioTipoIncidencia;
+import es.ujaen.dae.sistemadeincidenciasurbanas.repositorios.RepositorioUsuario;
+import es.ujaen.dae.sistemadeincidenciasurbanas.util.DistanciaGeografica;
+import jakarta.annotation.PostConstruct;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 @Service
 @Validated
@@ -75,9 +88,7 @@ public class Sistema {
     }
 
     public void crearIncidencia(@Valid Incidencia nuevaIncidencia, @NotNull Usuario usuario) {
-        System.out.println("LLEGO AQUI---");
         if (usuario == null) throw new UsuarioNoLogeado();
-        System.out.println("LLEGO AQUI------------------------------------------------------");
         Usuario usuarioAttached = repositorioUsuario.actualizar(usuario);
         TipoIncidencia tipoAttached = repositorioTipo.buscar(nuevaIncidencia.tipoIncidencia().nombre())
                 .orElseThrow(() -> new IllegalArgumentException("Tipo de incidencia no existe"));
