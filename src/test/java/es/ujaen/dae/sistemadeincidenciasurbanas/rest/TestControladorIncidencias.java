@@ -1,32 +1,29 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.rest;
 
-import java.time.LocalDate;
+import es.ujaen.dae.sistemadeincidenciasurbanas.SistemaDeIncidenciasUrbanasApplication;
+import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.EstadoIncidencia;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.*;
+import es.ujaen.dae.sistemadeincidenciasurbanas.servicios.Sistema;
+import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
+import jakarta.annotation.PostConstruct;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.RequestEntity;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
-import es.ujaen.dae.sistemadeincidenciasurbanas.SistemaDeIncidenciasUrbanasApplication;
-import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.EstadoIncidencia;
-import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.DAutenticacionUsuario;
-import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.DIncidencia;
-import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.DTipoIncidencia;
-import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.DUsuario;
-import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.Mapeador;
-import es.ujaen.dae.sistemadeincidenciasurbanas.servicios.Sistema;
-import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
-import jakarta.annotation.PostConstruct;
+import java.time.LocalDate;
+
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 
 @SpringBootTest(classes = SistemaDeIncidenciasUrbanasApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
