@@ -100,9 +100,9 @@ public class Sistema {
     }
 
     public void crearIncidencia(@Valid Incidencia nuevaIncidencia, @NotNull Usuario usuario) {
-        System.out.println("LLEGO AQUI---");
+
         if (usuario == null) throw new UsuarioNoLogeado();
-        System.out.println("LLEGO AQUI------------------------------------------------------");
+
         Usuario usuarioAttached = repositorioUsuario.actualizar(usuario);
         TipoIncidencia tipoAttached = repositorioTipo.buscar(nuevaIncidencia.tipoIncidencia().nombre())
                 .orElseThrow(() -> new IllegalArgumentException("Tipo de incidencia no existe"));
