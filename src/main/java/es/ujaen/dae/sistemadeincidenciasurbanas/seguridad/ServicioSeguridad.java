@@ -39,15 +39,14 @@ public class ServicioSeguridad {
                         .requestMatchers("/incidencias/tipos/**").hasRole("ADMIN")
 
                         //Endpoints Crear, Borrar y Listar incidencias.
-                        .requestMatchers("incidencias/creadas/**").permitAll()
+                        .requestMatchers("incidencias/creadas/**").authenticated()
 
                         //Cualquier otra cosa.
                         .requestMatchers("/incidencias/**").permitAll()
 
                         //Endpoints de fotos
-                        .requestMatchers(HttpMethod.POST, "/incidencias/*/foto").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/incidencias/*/foto").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/incidencias/*/foto").authenticated()
+                        .requestMatchers("/incidencias/creadas/*/foto/**").authenticated()
+
                 )
                 .build();
     }

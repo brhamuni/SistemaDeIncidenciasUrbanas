@@ -196,8 +196,7 @@ public class Sistema {
     }
 
     public void agregarFotoAIncidencia(int idIncidencia, byte[] foto, @NotNull Usuario usuario) {
-        Incidencia incidencia = repositorioIncidencia.buscarPorId(idIncidencia)
-            .orElseThrow(IncidenciaNoExiste::new);
+        Incidencia incidencia = repositorioIncidencia.buscarPorId(idIncidencia).orElseThrow(IncidenciaNoExiste::new);
     
         // Solo el propietario de la incidencia o un admin puede agregar fotos
         if (!incidencia.usuario().equals(usuario) && !esAdmin(usuario)) {
@@ -208,22 +207,14 @@ public class Sistema {
         repositorioIncidencia.actualizar(incidencia);
     }
 
-    public byte[] obtenerFotoDeIncidencia(int idIncidencia) {
-        return repositorioIncidencia.buscarPorId(idIncidencia)
-            .map(Incidencia::foto)
-            .orElseThrow(IncidenciaNoExiste::new);
-    }
+    public byte[] obtenerFotoDeIncidencia(int idIncidencia, @NotNull Usuario usuario) {
+        Incidencia incidencia = repositorioIncidencia.buscarPorId(idIncidencia).orElseThrow(IncidenciaNoExiste::new);
 
-    public void eliminarFotoDeIncidencia(int idIncidencia, @NotNull Usuario usuario) {
-        Incidencia incidencia = repositorioIncidencia.buscarPorId(idIncidencia)
-            .orElseThrow(IncidenciaNoExiste::new);
-    
-        // Solo el propietario o un admin puede eliminar fotos
+        // Solo el propietario de la incidencia o un admin puede agregar fotos
         if (!incidencia.usuario().equals(usuario) && !esAdmin(usuario)) {
-            throw new AccionNoAutorizada("No tienes permiso para eliminar fotos de esta incidencia");
+            throw new AccionNoAutorizada("No tienes permiso para descargar fotos de esta incidencia");
         }
-    
-        incidencia.foto(null);
-        repositorioIncidencia.actualizar(incidencia);
+
+        return incidencia.foto();
     }
 }

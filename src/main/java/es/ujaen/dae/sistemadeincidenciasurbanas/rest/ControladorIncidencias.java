@@ -1,5 +1,6 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.rest;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 
@@ -151,101 +152,71 @@ public class  ControladorIncidencias {
     }
 
     /**
+     * Ejercicio Voluntario 1
      * Endpoint para subir una foto a una incidencia existente
-     * POST /incidencias/{id}/foto
      */
-    @PostMapping(value = "/{id}/foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Void> subirFoto(
-            @PathVariable int id,
-            @RequestParam("foto") MultipartFile archivo,
-            Principal usuarioAutenticado) {
-        
-        try {
-            // Validar que el archivo no esté vacío
-            if (archivo.isEmpty()) {
-                return ResponseEntity.badRequest().build();
+    @PostMapping(value = "/creadas/{id}/foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> subirFoto(@PathVariable int id, @RequestPart("foto") MultipartFile foto, Authentication authentication) {
+
+            //Validación de que la foto es correcta.
+            if (foto == null || foto.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
             }
-            
-            // Validar tipo de archivo (solo imágenes)
-            String contentType = archivo.getContentType();
+
+            //Validar que es una imagen correcta.
+            String contentType = foto.getContentType();
             if (contentType == null || !contentType.startsWith("image/")) {
                 return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).build();
             }
-            
-            // Validar tamaño máximo (5MB)
-            if (archivo.getSize() > 5 * 1024 * 1024) {
-                return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
-            }
-            
-            Usuario usuario = sistema.buscarUsuario(usuarioAutenticado.getName())
-                    .orElseThrow(UsuarioNoEncontrado::new);
-            
-            byte[] contenidoFoto = archivo.getBytes();
-            sistema.agregarFotoAIncidencia(id, contenidoFoto, usuario);
-            
-            return ResponseEntity.ok().build();
-            
-        } catch (UsuarioNoEncontrado e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        } catch (IncidenciaNoExiste e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (AccionNoAutorizada e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
 
-    /**
-     * Endpoint para descargar la foto de una incidencia
-     * GET /incidencias/{id}/foto
-     */
-    @GetMapping(value = "/{id}/foto", produces = MediaType.IMAGE_JPEG_VALUE)
-    public ResponseEntity<byte[]> descargarFoto(@PathVariable int id, Principal usuarioAutenticado) {
-        
-        try {
-            if (usuarioAutenticado == null) {
+            try {
+                //Obtener usuario autenticado
+                String login = authentication.getName();
+                Usuario usuario = sistema.buscarUsuario(login).orElseThrow(UsuarioNoEncontrado::new);
+
+                //Guardar la foto asociada a la incidencia
+                sistema.agregarFotoAIncidencia(id, foto.getBytes(), usuario);
+                return ResponseEntity.status(HttpStatus.CREATED).build();
+
+            } catch (UsuarioNoEncontrado e) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            } catch (IncidenciaNoExiste e) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            } catch (AccionNoAutorizada e) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            } catch (IOException e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
-            
-            byte[] foto = sistema.obtenerFotoDeIncidencia(id);
-            
-            if (foto == null || foto.length == 0) {
-                return ResponseEntity.notFound().build();
-            }
-            
-            return ResponseEntity.ok()
-                    .contentType(MediaType.IMAGE_JPEG)
-                    .body(foto);
-                    
-        } catch (IncidenciaNoExiste e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-    }
 
     /**
-     * Endpoint para eliminar la foto de una incidencia
-     * DELETE /incidencias/{id}/foto
+     * Ejercicio Voluntario 1
+     * Endpoint para descargar la foto de una incidencia
+     * Nota: Solo descarga fotos con la extensión PNG
      */
-    @DeleteMapping("/{id}/foto")
-    public ResponseEntity<Void> eliminarFoto(@PathVariable int id, Principal usuarioAutenticado) {
+    @GetMapping(value = "/creadas/{id}/foto", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> descargarFoto(@PathVariable int id, Authentication authentication) {
         
         try {
-            Usuario usuario = sistema.buscarUsuario(usuarioAutenticado.getName())
-                    .orElseThrow(UsuarioNoEncontrado::new);
+            //Obtener usuario autenticado
+            String login = authentication.getName();
+            Usuario usuario = sistema.buscarUsuario(login).orElseThrow(UsuarioNoEncontrado::new);
+
+            byte[] foto = sistema.obtenerFotoDeIncidencia(id,usuario);
+            if (foto == null || foto.length == 0) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
             
-            sistema.eliminarFotoDeIncidencia(id, usuario);
-            
-            return ResponseEntity.noContent().build();
-            
+            return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.IMAGE_PNG).body(foto);
+
         } catch (UsuarioNoEncontrado e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } catch (IncidenciaNoExiste e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (AccionNoAutorizada e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }
