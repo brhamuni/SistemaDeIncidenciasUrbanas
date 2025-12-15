@@ -14,6 +14,8 @@ import es.ujaen.dae.sistemadeincidenciasurbanas.servicios.Sistema;
 import jakarta.validation.ConstraintViolationException;
 import java.security.Principal;
 import java.util.List;
+
+import jdk.swing.interop.SwingInterOpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,34 +63,28 @@ public class  ControladorIncidencias {
     }
 
 
-    @PostMapping
-    public ResponseEntity<DIncidencia> crearIncidencia(@RequestBody DIncidencia incidencia, Principal usuarioAutenticado) {
-        try {
-            Usuario usuario = sistema.buscarUsuario(usuarioAutenticado.getName()).orElseThrow(UsuarioNoEncontrado::new);
-            Incidencia incidenciaCreada = mapeador.entidadNueva(incidencia);
+    @PostMapping("/creadas")
+    public ResponseEntity<DIncidencia> crearIncidencia(@RequestBody DIncidencia dIncidencia, Authentication authentication) {
 
-            sistema.crearIncidencia(incidenciaCreada, usuario);
-            return ResponseEntity.status(HttpStatus.CREATED).body(mapeador.dto(incidenciaCreada));
-        }
-        catch(UsuarioNoEncontrado e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        catch(IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+        String login = authentication.getName();
+        Usuario usuarioAutenticado = sistema.buscarUsuario(login).orElseThrow(UsuarioNoEncontrado::new);
+
+        Incidencia incidenciaCreada = mapeador.entidadNueva(dIncidencia);
+
+        sistema.crearIncidencia(incidenciaCreada, usuarioAutenticado);
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapeador.dto(incidenciaCreada));
+
     }
 
-    @GetMapping
-    public ResponseEntity<List<DIncidencia>> listarIncidenciasUsuario(Principal usuarioAutenticado) {
-        try {
-            Usuario usuario = sistema.buscarUsuario(usuarioAutenticado.getName()).orElseThrow(UsuarioNoEncontrado::new);
+    @GetMapping("/creadas")
+    public ResponseEntity<List<DIncidencia>> listarIncidenciasUsuario(Authentication authentication) {
+
+            String login = authentication.getName();
+            Usuario usuario = sistema.buscarUsuario(login).orElseThrow(UsuarioNoEncontrado::new);
             List<Incidencia> incidencias = sistema.listarIncidenciasDeUsuario(usuario);
 
-            return ResponseEntity.ok(incidencias.stream().map(i -> mapeador.dto(i)).toList());
-        }
-        catch(UsuarioNoEncontrado e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+            return ResponseEntity.status(HttpStatus.OK).body(incidencias.stream().map(i -> mapeador.dto(i)).toList());
+
     }
 
     @PostMapping("/tipos")

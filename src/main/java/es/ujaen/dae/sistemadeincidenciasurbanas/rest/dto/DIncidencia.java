@@ -14,7 +14,7 @@ public record DIncidencia(
         String localizacion,
         LocalizacionGPS localizacionGPS,
         EstadoIncidencia estadoIncidencia,
-        Usuario usuario,
-        TipoIncidencia tipoIncidencia,
+        String login,
+        String nombreTipoIncidencia,
         byte[] foto) {
 }

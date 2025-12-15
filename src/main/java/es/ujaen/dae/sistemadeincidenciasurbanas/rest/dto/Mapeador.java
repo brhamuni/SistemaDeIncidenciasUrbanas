@@ -69,17 +69,17 @@ public class Mapeador {
                 incidencia.localizacion(),
                 incidencia.localizacionGPS(),
                 incidencia.estadoIncidencia(),
-                incidencia.usuario(),
-                incidencia.tipoIncidencia(),
+                incidencia.usuario().login(),
+                incidencia.tipoIncidencia().nombre(),
                 incidencia.foto()
         );
     }
 
     public Incidencia entidad(DIncidencia dIncidencia) {
-        Usuario usuario = repositorioUsuario.buscarPorLogin(dIncidencia.usuario().login())
+        Usuario usuario = repositorioUsuario.buscarPorLogin(dIncidencia.login())
                 .orElseThrow(UsuarioNoLogeado::new);
 
-        TipoIncidencia tipo = repositorioTipoIncidencia.buscar(dIncidencia.tipoIncidencia().nombre())
+        TipoIncidencia tipo = repositorioTipoIncidencia.buscar(dIncidencia.nombreTipoIncidencia())
                 .orElseThrow(() -> new IllegalArgumentException("Tipo desconocido"));
 
         return new Incidencia(
@@ -95,11 +95,8 @@ public class Mapeador {
     }
 
     public Incidencia entidadNueva(DIncidencia dIncidencia) {
-        Usuario usuario = repositorioUsuario.buscarPorLogin(dIncidencia.usuario().login())
-                .orElseThrow(UsuarioNoLogeado::new);
-
-        TipoIncidencia tipo = repositorioTipoIncidencia.buscar(dIncidencia.tipoIncidencia().nombre())
-                .orElseThrow(() -> new IllegalArgumentException("Tipo desconocido"));
+        Usuario usuario = repositorioUsuario.buscarPorLogin(dIncidencia.login()).orElseThrow(UsuarioNoLogeado::new);
+        TipoIncidencia tipo = repositorioTipoIncidencia.buscar(dIncidencia.nombreTipoIncidencia()).orElseThrow(() -> new IllegalArgumentException("Tipo desconocido"));
 
         return new Incidencia(
                 dIncidencia.descripcion(),

@@ -2,6 +2,7 @@ package es.ujaen.dae.sistemadeincidenciasurbanas.rest;
 
 import es.ujaen.dae.sistemadeincidenciasurbanas.SistemaDeIncidenciasUrbanasApplication;
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.EstadoIncidencia;
+import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Incidencia;
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.TipoIncidencia;
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Usuario;
 import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.*;
@@ -26,6 +27,7 @@ import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -225,6 +227,82 @@ public class TestControladorIncidencias {
 
         ResponseEntity<Void> respuestaTipo = restTemplate.exchange(peticionCrearTipo, Void.class);
         assertThat(respuestaTipo.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void testCrearYBorrarIncidencia(){
+
+        //Login admin
+        ResponseEntity<String> loginAdmin = restTemplate.postForEntity(
+                "/autenticacion",
+                new DAutenticacionUsuario("admin", "admin1234"),
+                String.class
+        );
+        assertThat(loginAdmin.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        //Crear y enviar Tipo de incidencia
+        String tokenAdmin = loginAdmin.getBody();
+        DTipoIncidencia nuevoTipo = new DTipoIncidencia("Via Publica", "Arreglos de farolas y carreteras en la via publica" );
+
+        var peticionCrearTipo = RequestEntity
+                .post("/tipos")
+                .headers(headerAutorizacion(tokenAdmin))
+                .body(nuevoTipo);
+
+        ResponseEntity<Void> respuestaTipo = restTemplate.exchange(peticionCrearTipo, Void.class);
+        assertThat(respuestaTipo.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        //Creo un usuario nuevo
+        var dUsuario = new DUsuario("PedroBenito123", "miClAvE","pedrobeni1@gmail.com", "Pedro","Benito", LocalDate.of(2000, 1, 1),"Jaén Jaén","611225577" );
+        var respuesta = restTemplate.postForEntity(
+                "/usuarios",
+                dUsuario,
+                Void.class
+        );
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        //Login con usuario nuevo
+        var respuestaAutenticacion = restTemplate.postForEntity(
+                "/autenticacion",
+                new DAutenticacionUsuario(dUsuario.login(), dUsuario.claveAcceso()),
+                String.class
+        );
+        assertThat(respuestaAutenticacion.getStatusCode()).isEqualTo(HttpStatus.OK);
+        String tokenUsuario = respuestaAutenticacion.getBody();
+
+        //Creo y envío la nueva incidencia
+        DIncidencia nuevaIncidencia = new DIncidencia(
+                0,
+                null,
+                "Farola rota en la avenida principal",
+                "Avenida Principal, Jaén",
+                new LocalizacionGPS(10,10),
+                EstadoIncidencia.PENDIENTE,
+                dUsuario.login(),
+                nuevoTipo.nombre(),
+                null
+        );
+
+        var peticionCrearIncidencia = RequestEntity
+                .post("/creadas")
+                .headers(headerAutorizacion(tokenUsuario))
+                .body(nuevaIncidencia);
+
+        ResponseEntity<DIncidencia> respuestaIncidencia = restTemplate.exchange(peticionCrearIncidencia, DIncidencia.class);
+        assertThat(respuestaIncidencia.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        //Consulto las incidencias del usuario: PedroBenito123
+        var reqListado = RequestEntity
+                .get("/creadas")
+                .headers(headerAutorizacion(tokenUsuario))
+                .build();
+
+        ResponseEntity<DIncidencia[]> respListado = restTemplate.exchange(reqListado, DIncidencia[].class);
+
+        assertThat(respListado.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(respListado.getBody().length).isEqualTo(1);
+
+
     }
 
 }

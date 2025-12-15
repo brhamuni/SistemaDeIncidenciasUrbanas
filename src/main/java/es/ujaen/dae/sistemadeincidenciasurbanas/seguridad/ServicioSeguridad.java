@@ -38,6 +38,9 @@ public class ServicioSeguridad {
                         //Endpoints Crear, Borrar y Listar tipo incidencias.
                         .requestMatchers("/incidencias/tipos/**").hasRole("ADMIN")
 
+                        //Endpoints Crear, Borrar y Listar incidencias.
+                        .requestMatchers("incidencias/creadas/**").permitAll()
+
                         //Cualquier otra cosa.
                         .requestMatchers("/incidencias/**").permitAll()
                 )
