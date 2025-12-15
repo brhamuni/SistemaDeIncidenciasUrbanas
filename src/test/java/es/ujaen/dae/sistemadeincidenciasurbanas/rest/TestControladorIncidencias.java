@@ -302,6 +302,24 @@ public class TestControladorIncidencias {
         assertThat(respListado.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(respListado.getBody().length).isEqualTo(1);
 
+        RequestEntity<Void> peticionBorrarIncidencia = RequestEntity
+                .delete("/creadas/{id}", 1)
+                .headers(headerAutorizacion(tokenUsuario))
+                .build();
+
+        ResponseEntity<Void> respBorrarIncidencia = restTemplate.exchange(peticionBorrarIncidencia, Void.class);
+        assertThat(respBorrarIncidencia.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        //Listo para comprobar que esta borrado, lenght tiene que ser igua a 0
+        var reqListadoBorrado = RequestEntity
+                .get("/creadas")
+                .headers(headerAutorizacion(tokenUsuario))
+                .build();
+
+        ResponseEntity<DIncidencia[]> respListadoBorrado = restTemplate.exchange(reqListadoBorrado, DIncidencia[].class);
+
+        assertThat(respListadoBorrado.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(respListadoBorrado.getBody().length).isEqualTo(0);
 
     }
 

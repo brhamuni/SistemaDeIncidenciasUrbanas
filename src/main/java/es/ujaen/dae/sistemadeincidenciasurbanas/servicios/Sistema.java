@@ -75,9 +75,8 @@ public class Sistema {
     }
 
     public void crearIncidencia(@Valid Incidencia nuevaIncidencia, @NotNull Usuario usuario) {
-        System.out.println("LLEGO AQUI---");
         if (usuario == null) throw new UsuarioNoLogeado();
-        System.out.println("LLEGO AQUI------------------------------------------------------");
+
         Usuario usuarioAttached = repositorioUsuario.actualizar(usuario);
         TipoIncidencia tipoAttached = repositorioTipo.buscar(nuevaIncidencia.tipoIncidencia().nombre())
                 .orElseThrow(() -> new IllegalArgumentException("Tipo de incidencia no existe"));
@@ -121,6 +120,8 @@ public class Sistema {
         if (incidencia.id() == 0) {
             throw new IncidenciaNoExiste();
         }
+
+        System.out.println("usuario de la incidencia: " + incidencia.usuario().login() + "incidencia: " + incidencia.descripcion());
 
         if (esAdmin(usuario)) {
             repositorioIncidencia.borrar(incidencia);
