@@ -95,9 +95,9 @@ public class RepositorioIncidencia {
         return incidencias;
     }
 
-    public boolean existeConTipoIncidencia(TipoIncidencia tipoIncidencia) {
-        Long count = em.createQuery("SELECT COUNT(i) FROM Incidencia i WHERE i.tipoIncidencia = :tipo", Long.class)
-                .setParameter("tipo", tipoIncidencia)
+    public boolean existeConTipoIncidencia(String nombreTipoIncidencia) {
+        Long count = em.createQuery("SELECT COUNT(i) FROM Incidencia i WHERE i.tipoIncidencia.nombre = :nombre", Long.class)
+                .setParameter("nombre", nombreTipoIncidencia)
                 .getSingleResult();
 
         return count > 0;

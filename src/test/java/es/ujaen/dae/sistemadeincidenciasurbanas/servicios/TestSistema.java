@@ -222,7 +222,7 @@ class TestSistema {
         sistema.addTipoIncidencia(tipoBorrable, admin);
 
         assertEquals(1, sistema.listarTiposDeIncidencia().size());
-        assertDoesNotThrow(() -> sistema.borrarTipoIncidencia(tipoBorrable, admin));
+        assertDoesNotThrow(() -> sistema.borrarTipoIncidencia(tipoBorrable.nombre(), admin));
         assertEquals(0, sistema.listarTiposDeIncidencia().size());
     }
 
@@ -241,7 +241,7 @@ class TestSistema {
         nuevaIncidencia.tipoIncidencia(tipoEnUso);
         sistema.crearIncidencia(nuevaIncidencia, usuarioLogueado);
         assertThrows(TipoIncidenciaEnUso.class, () -> {
-            sistema.borrarTipoIncidencia(tipoEnUso, admin);
+            sistema.borrarTipoIncidencia(tipoEnUso.nombre(), admin);
         });
         assertEquals(1, sistema.listarTiposDeIncidencia().size());
     }

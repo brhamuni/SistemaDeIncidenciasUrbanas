@@ -28,8 +28,8 @@ public class RepositorioTipoIncidencia {
 
     @Transactional(propagation = Propagation.REQUIRED, readOnly = false)
     @CacheEvict(value = {"tiposIncidenciaPorNombre", "tiposIncidencia"}, allEntries = true)
-    public void borrar(@NotNull TipoIncidencia tipo) {
-        TipoIncidencia managedTipo = em.find(TipoIncidencia.class, tipo.nombre());
+    public void borrar(@NotNull String nombre) {
+        TipoIncidencia managedTipo = em.find(TipoIncidencia.class, nombre);
         if (managedTipo != null) {
             em.remove(managedTipo);
         }

@@ -155,14 +155,14 @@ public class Sistema {
         repositorioTipo.guardar(nuevoTipo);
     }
 
-    public void borrarTipoIncidencia(@Valid TipoIncidencia tipoIncidencia, @NotNull Usuario usuario) {
+    public void borrarTipoIncidencia(@Valid String nombre, @NotNull Usuario usuario) {
         if (!esAdmin(usuario)) throw new UsuarioNoAdmin();
 
-        if (repositorioIncidencia.existeConTipoIncidencia(tipoIncidencia)) {
+        if (repositorioIncidencia.existeConTipoIncidencia(nombre)) {
             throw new TipoIncidenciaEnUso("No se puede borrar un tipo de incidencia en uso.");
         }
 
-        repositorioTipo.borrar(tipoIncidencia);
+        repositorioTipo.borrar(nombre);
     }
 
     public List<TipoIncidencia> listarTiposDeIncidencia() {

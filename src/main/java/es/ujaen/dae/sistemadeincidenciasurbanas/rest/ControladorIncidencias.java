@@ -18,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -103,4 +102,18 @@ public class ControladorIncidencias {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @GetMapping("/tipos")
+    public ResponseEntity<List<DTipoIncidencia>> listarTipos() {
+        List<TipoIncidencia> tipos = sistema.listarTiposDeIncidencia();
+        return ResponseEntity.ok(tipos.stream().map(mapeador::dto).toList());
+    }
+
+    @DeleteMapping("/tipos/{nombreTipoIncidencia}")
+    public ResponseEntity<Void> borrarTipo(@PathVariable String nombreTipoIncidencia, Authentication authentication) {
+        String login = authentication.getName();
+        Usuario usuarioAutenticado = sistema.buscarUsuario(login).orElseThrow(UsuarioNoEncontrado::new);
+
+        sistema.borrarTipoIncidencia(nombreTipoIncidencia,usuarioAutenticado);
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
 }

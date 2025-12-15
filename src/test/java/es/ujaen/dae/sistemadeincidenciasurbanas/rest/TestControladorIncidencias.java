@@ -25,6 +25,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -162,7 +163,7 @@ public class TestControladorIncidencias {
     }
 
     @Test
-    void testCrearTipoIncidencia_UsuarioAdmin() {
+    void testCrearYBorrarTipoIncidencia_UsuarioAdmin() {
 
         //Login admin
         ResponseEntity<String> loginAdmin = restTemplate.postForEntity(
@@ -183,6 +184,15 @@ public class TestControladorIncidencias {
 
         ResponseEntity<Void> respuestaTipo = restTemplate.exchange(peticionCrearTipo, Void.class);
         assertThat(respuestaTipo.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        //Borro el tipo de incidencia
+        RequestEntity<Void> peticionBorrar = RequestEntity
+                .delete("/tipos/{nombreTipoIncidencia}", "Via Publica")
+                .headers(headerAutorizacion(tokenAdmin))
+                .build();
+
+        ResponseEntity<Void> respuestaBorrar = restTemplate.exchange(peticionBorrar, Void.class);
+        assertThat(respuestaBorrar.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test
@@ -205,12 +215,12 @@ public class TestControladorIncidencias {
         assertThat(loginAdmin.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         //Crear y enviar Tipo de incidencia
-        String tokenAdmin = loginAdmin.getBody();
+        String token = loginAdmin.getBody();
         DTipoIncidencia nuevoTipo = new DTipoIncidencia("Via Publica", "Arreglos de farolas y carreteras en la via publica" );
 
         var peticionCrearTipo = RequestEntity
                 .post("/tipos")
-                .headers(headerAutorizacion(tokenAdmin))
+                .headers(headerAutorizacion(token))
                 .body(nuevoTipo);
 
         ResponseEntity<Void> respuestaTipo = restTemplate.exchange(peticionCrearTipo, Void.class);

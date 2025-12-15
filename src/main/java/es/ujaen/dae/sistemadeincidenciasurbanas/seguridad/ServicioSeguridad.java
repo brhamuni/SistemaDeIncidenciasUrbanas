@@ -30,25 +30,17 @@ public class ServicioSeguridad {
                 .sessionManagement(session -> session.disable())
                 .addFilterAfter(new FiltroAutenticacionJwt(), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers(HttpMethod.POST, "/incidencias/autenticacion").permitAll()
-                        
-                        .requestMatchers(HttpMethod.POST, "/incidencias/usuarios").permitAll()
                         .requestMatchers(HttpMethod.GET, "/incidencias/usuarios/{login}")
-                            .access(new WebExpressionAuthorizationManager(
-                                "hasRole('ADMIN') or (hasRole('USER') and #login == principal)"))
-                        .requestMatchers(HttpMethod.PUT, "/incidencias/usuarios/{login}")
-                            .access(new WebExpressionAuthorizationManager(
-                                "hasRole('USER') and #login == principal"))
-                        
-                        .requestMatchers(HttpMethod.GET, "/incidencias/tipos/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/incidencias/tipos").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/incidencias/tipos/**").hasRole("ADMIN")
-                        
-                        .requestMatchers(HttpMethod.GET, "/incidencias/buscar").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/incidencias").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/incidencias").authenticated()
-                        
-                        .requestMatchers("/incidencias/**").authenticated()
+                            .access(new WebExpressionAuthorizationManager("hasRole('ADMIN') or (hasRole('USER') and #login == principal)"))
+
+                        .requestMatchers("/incidencias/autenticacion").permitAll()
+
+                        //Endpoints Crear, Borrar y Listar tipo incidencias.
+                        .requestMatchers("/incidencias/tipos/**").hasRole("ADMIN")
+
+                        //Cualquier otra cosa.
+                        .requestMatchers("/incidencias/**").permitAll()
+
                 )
                 .build();
     }
