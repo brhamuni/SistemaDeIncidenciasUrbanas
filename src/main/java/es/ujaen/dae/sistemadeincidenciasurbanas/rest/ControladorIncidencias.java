@@ -17,6 +17,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -92,9 +93,10 @@ public class ControladorIncidencias {
     }
 
     @PostMapping("/tipos")
-    public ResponseEntity<Void> crearTipo(@RequestBody DTipoIncidencia dTipo,@AuthenticationPrincipal Usuario usuarioAutenticado) {
-        System.out.println(">>> ENDPOINT crearTipo LLAMADO");
-        System.out.println(">>> Usuario autenticado: " + usuarioAutenticado);
+    public ResponseEntity<Void> crearTipo(@RequestBody DTipoIncidencia dTipo, Authentication authentication) {
+
+        String login = authentication.getName();
+        Usuario usuarioAutenticado = sistema.buscarUsuario(login).orElseThrow(UsuarioNoEncontrado::new);
 
         TipoIncidencia nuevoTipo = mapeador.entidadNueva(dTipo);
         sistema.addTipoIncidencia(nuevoTipo,usuarioAutenticado);

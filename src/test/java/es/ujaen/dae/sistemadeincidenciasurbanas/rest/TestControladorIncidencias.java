@@ -22,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -158,6 +159,62 @@ public class TestControladorIncidencias {
 
         assertThat(respuestaUsuario.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(respuestaUsuario.getBody().login()).isEqualTo(usuario.login());
+    }
+
+    @Test
+    void testCrearTipoIncidencia_UsuarioAdmin() {
+
+        //Login admin
+        ResponseEntity<String> loginAdmin = restTemplate.postForEntity(
+                "/autenticacion",
+                new DAutenticacionUsuario("admin", "admin1234"),
+                String.class
+        );
+        assertThat(loginAdmin.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        //Crear y enviar Tipo de incidencia
+        String tokenAdmin = loginAdmin.getBody();
+        DTipoIncidencia nuevoTipo = new DTipoIncidencia("Via Publica", "Arreglos de farolas y carreteras en la via publica" );
+
+        var peticionCrearTipo = RequestEntity
+                .post("/tipos")
+                .headers(headerAutorizacion(tokenAdmin))
+                .body(nuevoTipo);
+
+        ResponseEntity<Void> respuestaTipo = restTemplate.exchange(peticionCrearTipo, Void.class);
+        assertThat(respuestaTipo.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
+    @Test
+    void testCrearTipoIncidencia_UsuarioNoAdmin() {
+        //Creo un usuario no admin
+        var usuario = new DUsuario("PedroBenito123", "miClAvE","pedrobeni1@gmail.com", "Pedro","Benito", LocalDate.of(2000, 1, 1),"Jaén Jaén","611225577" );
+        var respuesta = restTemplate.postForEntity(
+                "/usuarios",
+                usuario,
+                Void.class
+        );
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        //Login no admin
+        ResponseEntity<String> loginAdmin = restTemplate.postForEntity(
+                "/autenticacion",
+                new DAutenticacionUsuario("PedroBenito123", "miClAvE"),
+                String.class
+        );
+        assertThat(loginAdmin.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        //Crear y enviar Tipo de incidencia
+        String tokenAdmin = loginAdmin.getBody();
+        DTipoIncidencia nuevoTipo = new DTipoIncidencia("Via Publica", "Arreglos de farolas y carreteras en la via publica" );
+
+        var peticionCrearTipo = RequestEntity
+                .post("/tipos")
+                .headers(headerAutorizacion(tokenAdmin))
+                .body(nuevoTipo);
+
+        ResponseEntity<Void> respuestaTipo = restTemplate.exchange(peticionCrearTipo, Void.class);
+        assertThat(respuestaTipo.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
 }
