@@ -1,9 +1,11 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.rest;
 
+import java.security.Principal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,12 +15,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Incidencia;
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.TipoIncidencia;
 import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Usuario;
+import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.AccionNoAutorizada;
+import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.IncidenciaNoExiste;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.UsuarioNoEncontrado;
 import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.UsuarioYaExiste;
 import es.ujaen.dae.sistemadeincidenciasurbanas.repositorios.RepositorioIncidencia;
@@ -142,5 +148,104 @@ public class  ControladorIncidencias {
 
         sistema.borrarTipoIncidencia(nombreTipoIncidencia,usuarioAutenticado);
         return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+    /**
+     * Endpoint para subir una foto a una incidencia existente
+     * POST /incidencias/{id}/foto
+     */
+    @PostMapping(value = "/{id}/foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> subirFoto(
+            @PathVariable int id,
+            @RequestParam("foto") MultipartFile archivo,
+            Principal usuarioAutenticado) {
+        
+        try {
+            // Validar que el archivo no esté vacío
+            if (archivo.isEmpty()) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            // Validar tipo de archivo (solo imágenes)
+            String contentType = archivo.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).build();
+            }
+            
+            // Validar tamaño máximo (5MB)
+            if (archivo.getSize() > 5 * 1024 * 1024) {
+                return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
+            }
+            
+            Usuario usuario = sistema.buscarUsuario(usuarioAutenticado.getName())
+                    .orElseThrow(UsuarioNoEncontrado::new);
+            
+            byte[] contenidoFoto = archivo.getBytes();
+            sistema.agregarFotoAIncidencia(id, contenidoFoto, usuario);
+            
+            return ResponseEntity.ok().build();
+            
+        } catch (UsuarioNoEncontrado e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (IncidenciaNoExiste e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (AccionNoAutorizada e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Endpoint para descargar la foto de una incidencia
+     * GET /incidencias/{id}/foto
+     */
+    @GetMapping(value = "/{id}/foto", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<byte[]> descargarFoto(@PathVariable int id, Principal usuarioAutenticado) {
+        
+        try {
+            if (usuarioAutenticado == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            byte[] foto = sistema.obtenerFotoDeIncidencia(id);
+            
+            if (foto == null || foto.length == 0) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(foto);
+                    
+        } catch (IncidenciaNoExiste e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Endpoint para eliminar la foto de una incidencia
+     * DELETE /incidencias/{id}/foto
+     */
+    @DeleteMapping("/{id}/foto")
+    public ResponseEntity<Void> eliminarFoto(@PathVariable int id, Principal usuarioAutenticado) {
+        
+        try {
+            Usuario usuario = sistema.buscarUsuario(usuarioAutenticado.getName())
+                    .orElseThrow(UsuarioNoEncontrado::new);
+            
+            sistema.eliminarFotoDeIncidencia(id, usuario);
+            
+            return ResponseEntity.noContent().build();
+            
+        } catch (UsuarioNoEncontrado e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (IncidenciaNoExiste e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (AccionNoAutorizada e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
     }
 }
