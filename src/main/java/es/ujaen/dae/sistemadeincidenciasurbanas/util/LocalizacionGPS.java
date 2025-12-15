@@ -22,7 +22,7 @@ public class LocalizacionGPS {
         return x;
     }
 
-    public void x(int x) {
+    public void x(double x) {
         this.x = x;
     }
 
@@ -30,7 +30,7 @@ public class LocalizacionGPS {
         return y;
     }
 
-    public void y(int y) {
+    public void y(double y) {
         this.y = y;
     }
 }

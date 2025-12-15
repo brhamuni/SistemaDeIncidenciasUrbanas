@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/incidencias")
-public class ControladorIncidencias {
+public class  ControladorIncidencias {
     @Autowired
     Mapeador mapeador;
 
