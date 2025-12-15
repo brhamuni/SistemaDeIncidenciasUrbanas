@@ -194,4 +194,36 @@ public class Sistema {
     public List<TipoIncidencia> listarTiposDeIncidencia() {
         return repositorioTipo.listarTodos();
     }
+
+    public void agregarFotoAIncidencia(int idIncidencia, byte[] foto, @NotNull Usuario usuario) {
+        Incidencia incidencia = repositorioIncidencia.buscarPorId(idIncidencia)
+            .orElseThrow(IncidenciaNoExiste::new);
+    
+        // Solo el propietario de la incidencia o un admin puede agregar fotos
+        if (!incidencia.usuario().equals(usuario) && !esAdmin(usuario)) {
+            throw new AccionNoAutorizada("No tienes permiso para agregar fotos a esta incidencia");
+        }
+    
+        incidencia.foto(foto);
+        repositorioIncidencia.actualizar(incidencia);
+    }
+
+    public byte[] obtenerFotoDeIncidencia(int idIncidencia) {
+        return repositorioIncidencia.buscarPorId(idIncidencia)
+            .map(Incidencia::foto)
+            .orElseThrow(IncidenciaNoExiste::new);
+    }
+
+    public void eliminarFotoDeIncidencia(int idIncidencia, @NotNull Usuario usuario) {
+        Incidencia incidencia = repositorioIncidencia.buscarPorId(idIncidencia)
+            .orElseThrow(IncidenciaNoExiste::new);
+    
+        // Solo el propietario o un admin puede eliminar fotos
+        if (!incidencia.usuario().equals(usuario) && !esAdmin(usuario)) {
+            throw new AccionNoAutorizada("No tienes permiso para eliminar fotos de esta incidencia");
+        }
+    
+        incidencia.foto(null);
+        repositorioIncidencia.actualizar(incidencia);
+    }
 }
