@@ -563,7 +563,7 @@ public class TestControladorIncidencias {
         body.add("foto", recursoFoto);
         HttpEntity<MultiValueMap<String, Object>> peticionFoto = new HttpEntity<>(body, headersFoto);
 
-        //Enviamos la imagen
+        //Enviamos la imagen.
         ResponseEntity<Void> respuestaSubida = restTemplate.postForEntity(
                 "/creadas/" + idIncidencia + "/foto",
                 peticionFoto,
