@@ -40,7 +40,6 @@ public class ServicioSeguridad {
 
                         //Cualquier otra cosa.
                         .requestMatchers("/incidencias/**").permitAll()
-
                 )
                 .build();
     }
