@@ -43,6 +43,11 @@ public class ServicioSeguridad {
 
                         //Cualquier otra cosa.
                         .requestMatchers("/incidencias/**").permitAll()
+
+                        //Endpoints de fotos
+                        .requestMatchers(HttpMethod.POST, "/incidencias/*/foto").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/incidencias/*/foto").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/incidencias/*/foto").authenticated()
                 )
                 .build();
     }
