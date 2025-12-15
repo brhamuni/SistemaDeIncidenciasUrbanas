@@ -1,15 +1,5 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.servicios;
 
-import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.*;
-import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.*;
-import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
-
 import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,7 +7,30 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
+
+import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.EstadoIncidencia;
+import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Incidencia;
+import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.TipoIncidencia;
+import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Usuario;
+import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.AccionNoAutorizada;
+import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.TipoIncidenciaEnUso;
+import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.TipoIncidenciaYaExiste;
+import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.UsuarioNoAdmin;
+import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.UsuarioNoEncontrado;
+import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.UsuarioNoLogeado;
+import es.ujaen.dae.sistemadeincidenciasurbanas.excepciones.UsuarioYaExiste;
+import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
 
 @SpringBootTest
 @ActiveProfiles("test") // Activamos el 'application-test.properties' (H2 y create-drop)
@@ -91,6 +104,15 @@ class TestSistema {
         Usuario usuarioActualizado = sistema.iniciarSesion("usuariotest", "usuariotest1234").orElseThrow();
         assertEquals("Nombre Nuevo", usuarioActualizado.nombre());
         assertEquals("Casa Nueva", usuarioActualizado.direccion());
+    }
+
+    @Test
+    void actualizarUsuarioNoExistenteLanzaExcepcion() {
+        Usuario usuarioInexistente = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa", "600000000", "usuario@test.com", "noexiste", "password");
+    
+        assertThrows(UsuarioNoEncontrado.class, () -> 
+            sistema.actualizarDatosUsuario(usuarioInexistente)
+        );
     }
 
     //Test para Incidencia
@@ -214,6 +236,157 @@ class TestSistema {
         assertEquals(incidencia.id(), incidenciasResueltas.getFirst().id());
     }
 
+    @Test
+    void usuarioNormalNoPuedeCambiarEstadoIncidencia() {
+        Usuario usuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
+        sistema.registrarUsuario(usuario);
+    
+        Usuario admin = sistema.iniciarSesion("admin", "$2a$10$8CjaO.y0yCvi.HynDNAgZe2chWO3S2oOkQzwuQLCSVi1Jg4J7dlme").orElseThrow();
+        sistema.addTipoIncidencia(new TipoIncidencia("Limpieza", "Suciedad"), admin);
+    
+        TipoIncidencia tipo = sistema.listarTiposDeIncidencia().getFirst();
+        Usuario usuarioLogueado = sistema.iniciarSesion("usuariotest", "usuariotest1234").orElseThrow();
+    
+        Incidencia nuevaIncidencia = new Incidencia();
+        nuevaIncidencia.descripcion("Test");
+        nuevaIncidencia.localizacion("Test");
+        nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
+        nuevaIncidencia.tipoIncidencia(tipo);
+        sistema.crearIncidencia(nuevaIncidencia, usuarioLogueado);
+    
+        Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuarioLogueado).getFirst();
+    
+        assertThrows(UsuarioNoAdmin.class, () -> 
+            sistema.modificarEstadoIncidencia(incidencia, EstadoIncidencia.RESUELTA, usuarioLogueado)
+        );
+    }
+
+    @Test
+    void usuarioNormalNoPuedeBorrarIncidenciaNoEstaPendiente() {
+        Usuario usuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
+        sistema.registrarUsuario(usuario);
+    
+        Usuario admin = sistema.iniciarSesion("admin", "$2a$10$8CjaO.y0yCvi.HynDNAgZe2chWO3S2oOkQzwuQLCSVi1Jg4J7dlme").orElseThrow();
+        sistema.addTipoIncidencia(new TipoIncidencia("Limpieza", "Suciedad"), admin);
+    
+        TipoIncidencia tipo = sistema.listarTiposDeIncidencia().getFirst();
+        Usuario usuarioLogueado = sistema.iniciarSesion("usuariotest", "usuariotest1234").orElseThrow();
+    
+        Incidencia nuevaIncidencia = new Incidencia();
+        nuevaIncidencia.descripcion("Test");
+        nuevaIncidencia.localizacion("Test");
+        nuevaIncidencia.localizacionGPS(new LocalizacionGPS(10,10));
+        nuevaIncidencia.tipoIncidencia(tipo);
+        sistema.crearIncidencia(nuevaIncidencia, usuarioLogueado);
+    
+        Incidencia incidencia = sistema.listarIncidenciasDeUsuario(usuarioLogueado).getFirst();
+    
+        sistema.modificarEstadoIncidencia(incidencia, EstadoIncidencia.EN_EVALUACION, admin);
+    
+        assertThrows(AccionNoAutorizada.class, () -> 
+            sistema.borrarIncidencia(usuarioLogueado, incidencia)
+        );
+    }
+
+    @Test
+    void buscarIncidenciasPorTipo() {
+        Usuario usuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
+        sistema.registrarUsuario(usuario);
+    
+        Usuario admin = sistema.iniciarSesion("admin", "$2a$10$8CjaO.y0yCvi.HynDNAgZe2chWO3S2oOkQzwuQLCSVi1Jg4J7dlme").orElseThrow();
+        sistema.addTipoIncidencia(new TipoIncidencia("Limpieza", "Suciedad"), admin);
+        sistema.addTipoIncidencia(new TipoIncidencia("Vandalismo", "Daños"), admin);
+    
+        List<TipoIncidencia> tipos = sistema.listarTiposDeIncidencia();
+        TipoIncidencia tipoLimpieza = tipos.stream().filter(t -> t.nombre().equals("Limpieza")).findFirst().orElseThrow();
+        TipoIncidencia tipoVandalismo = tipos.stream().filter(t -> t.nombre().equals("Vandalismo")).findFirst().orElseThrow();
+    
+        Usuario usuarioLogueado = sistema.iniciarSesion("usuariotest", "usuariotest1234").orElseThrow();
+    
+        Incidencia inc1 = new Incidencia();
+        inc1.descripcion("Basura");
+        inc1.localizacion("Calle 1");
+        inc1.localizacionGPS(new LocalizacionGPS(10,10));
+        inc1.tipoIncidencia(tipoLimpieza);
+        sistema.crearIncidencia(inc1, usuarioLogueado);
+    
+        Incidencia inc2 = new Incidencia();
+        inc2.descripcion("Pintada");
+        inc2.localizacion("Calle 2");
+        inc2.localizacionGPS(new LocalizacionGPS(20,20));
+        inc2.tipoIncidencia(tipoVandalismo);
+        sistema.crearIncidencia(inc2, usuarioLogueado);
+    
+        List<Incidencia> incidenciasLimpieza = sistema.buscarIncidencias(tipoLimpieza, null);
+        assertEquals(1, incidenciasLimpieza.size());
+        assertEquals("Basura", incidenciasLimpieza.getFirst().descripcion());
+    }
+
+    @Test
+    void buscarIncidenciasPorEstado() {
+        Usuario usuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
+        sistema.registrarUsuario(usuario);
+    
+        Usuario admin = sistema.iniciarSesion("admin", "$2a$10$8CjaO.y0yCvi.HynDNAgZe2chWO3S2oOkQzwuQLCSVi1Jg4J7dlme").orElseThrow();
+        sistema.addTipoIncidencia(new TipoIncidencia("Limpieza", "Suciedad"), admin);
+    
+        TipoIncidencia tipo = sistema.listarTiposDeIncidencia().getFirst();
+        Usuario usuarioLogueado = sistema.iniciarSesion("usuariotest", "usuariotest1234").orElseThrow();
+    
+        Incidencia inc1 = new Incidencia();
+        inc1.descripcion("Pendiente 1");
+        inc1.localizacion("Calle 1");
+        inc1.localizacionGPS(new LocalizacionGPS(10,10));
+        inc1.tipoIncidencia(tipo);
+        sistema.crearIncidencia(inc1, usuarioLogueado);
+    
+        Incidencia inc2 = new Incidencia();
+        inc2.descripcion("Pendiente 2");
+        inc2.localizacion("Calle 2");
+        inc2.localizacionGPS(new LocalizacionGPS(20,20));
+        inc2.tipoIncidencia(tipo);
+        sistema.crearIncidencia(inc2, usuarioLogueado);
+    
+        Incidencia incidenciaCreada = sistema.listarIncidenciasDeUsuario(usuarioLogueado).get(0);
+        sistema.modificarEstadoIncidencia(incidenciaCreada, EstadoIncidencia.RESUELTA, admin);
+    
+        List<Incidencia> pendientes = sistema.buscarIncidencias(null, EstadoIncidencia.PENDIENTE);
+        assertEquals(1, pendientes.size());
+    
+        List<Incidencia> resueltas = sistema.buscarIncidencias(null, EstadoIncidencia.RESUELTA);
+        assertEquals(1, resueltas.size());
+    }
+
+    @Test
+    void obtenerIncidenciasCercanasRetornaIncidenciasCorrectas() {
+        Usuario usuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
+        sistema.registrarUsuario(usuario);
+        Usuario usuarioLogueado = sistema.iniciarSesion("usuariotest", "usuariotest1234").orElseThrow();
+    
+        Usuario admin = sistema.iniciarSesion("admin", "$2a$10$8CjaO.y0yCvi.HynDNAgZe2chWO3S2oOkQzwuQLCSVi1Jg4J7dlme").orElseThrow();
+        sistema.addTipoIncidencia(new TipoIncidencia("Limpieza", "Suciedad"), admin);
+        TipoIncidencia tipo = sistema.listarTiposDeIncidencia().getFirst();
+    
+        Incidencia inc1 = new Incidencia();
+        inc1.descripcion("Cercana");
+        inc1.localizacion("Punto A");
+        inc1.localizacionGPS(new LocalizacionGPS(-122.4194, 37.7749));
+        inc1.tipoIncidencia(tipo);
+        sistema.crearIncidencia(inc1, usuarioLogueado);
+    
+        Incidencia inc2 = new Incidencia();
+        inc2.descripcion("Lejana");
+        inc2.localizacion("Punto B");
+        inc2.localizacionGPS(new LocalizacionGPS(-74.0060, 40.7128));
+        inc2.tipoIncidencia(tipo);
+        sistema.crearIncidencia(inc2, usuarioLogueado);
+    
+        List<Incidencia> cercanas = sistema.obtenerIncidenciasCercanas(37.7749, -122.4194);
+    
+        assertEquals(1, cercanas.size());
+        assertEquals("Cercana", cercanas.getFirst().descripcion());
+    }
+
     //Test para TipoIncidencia
 
     @Test
@@ -313,6 +486,65 @@ class TestSistema {
 
         List<Incidencia> incidenciasUsuario = sistema.listarIncidenciasDeUsuario(usuarioLogueado);
         assertEquals(2, incidenciasUsuario.size());
+    }
+
+    @Test
+    void usuarioNormalNoPuedeAddTipoIncidencia() {
+        Usuario usuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
+        sistema.registrarUsuario(usuario);
+        Usuario usuarioLogueado = sistema.iniciarSesion("usuariotest", "usuariotest1234").orElseThrow();
+    
+        TipoIncidencia nuevoTipo = new TipoIncidencia("NuevoTipo", "Descripción");
+    
+        assertThrows(UsuarioNoAdmin.class, () -> 
+            sistema.addTipoIncidencia(nuevoTipo, usuarioLogueado)
+        );
+    }
+
+    @Test
+    void usuarioNormalNoPuedeBorrarTipoIncidencia() {
+        Usuario usuario = new Usuario("Test", "Usuario", LocalDate.of(2004, 1, 1), "Casa", "600000000", "usuario@test.com", "usuariotest", "usuariotest1234");
+        sistema.registrarUsuario(usuario);
+    
+        Usuario admin = sistema.iniciarSesion("admin", "$2a$10$8CjaO.y0yCvi.HynDNAgZe2chWO3S2oOkQzwuQLCSVi1Jg4J7dlme").orElseThrow();
+        TipoIncidencia tipo = new TipoIncidencia("Borrable", "Test");
+        sistema.addTipoIncidencia(tipo, admin);
+    
+        Usuario usuarioLogueado = sistema.iniciarSesion("usuariotest", "usuariotest1234").orElseThrow();
+    
+        assertThrows(UsuarioNoAdmin.class, () -> 
+            sistema.borrarTipoIncidencia(tipo.nombre(), usuarioLogueado)
+        );
+    }
+
+    @Test
+    void addTipoIncidenciaDuplicadoLanzaExcepcion() {
+        Usuario admin = sistema.iniciarSesion("admin", "$2a$10$8CjaO.y0yCvi.HynDNAgZe2chWO3S2oOkQzwuQLCSVi1Jg4J7dlme").orElseThrow();
+    
+        TipoIncidencia tipo1 = new TipoIncidencia("Duplicado", "Primera vez");
+        sistema.addTipoIncidencia(tipo1, admin);
+    
+        TipoIncidencia tipo2 = new TipoIncidencia("Duplicado", "Segunda vez");
+    
+        assertThrows(TipoIncidenciaYaExiste.class, () -> 
+            sistema.addTipoIncidencia(tipo2, admin)
+        );
+    }
+
+    @Test
+    void listarTiposDeIncidenciaRetornaListaCompleta() {
+        Usuario admin = sistema.iniciarSesion("admin", "$2a$10$8CjaO.y0yCvi.HynDNAgZe2chWO3S2oOkQzwuQLCSVi1Jg4J7dlme").orElseThrow();
+    
+        sistema.addTipoIncidencia(new TipoIncidencia("Tipo1", "Desc1"), admin);
+        sistema.addTipoIncidencia(new TipoIncidencia("Tipo2", "Desc2"), admin);
+        sistema.addTipoIncidencia(new TipoIncidencia("Tipo3", "Desc3"), admin);
+    
+        List<TipoIncidencia> tipos = sistema.listarTiposDeIncidencia();
+    
+        assertEquals(3, tipos.size());
+        assertTrue(tipos.stream().anyMatch(t -> t.nombre().equals("Tipo1")));
+        assertTrue(tipos.stream().anyMatch(t -> t.nombre().equals("Tipo2")));
+        assertTrue(tipos.stream().anyMatch(t -> t.nombre().equals("Tipo3")));
     }
 
     //Test para incidencia cercanas

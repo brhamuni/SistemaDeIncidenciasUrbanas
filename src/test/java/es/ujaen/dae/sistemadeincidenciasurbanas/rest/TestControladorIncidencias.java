@@ -1,35 +1,32 @@
 package es.ujaen.dae.sistemadeincidenciasurbanas.rest;
 
-import es.ujaen.dae.sistemadeincidenciasurbanas.SistemaDeIncidenciasUrbanasApplication;
-import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.EstadoIncidencia;
-import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Incidencia;
-import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.TipoIncidencia;
-import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.Usuario;
-import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.*;
-import es.ujaen.dae.sistemadeincidenciasurbanas.servicios.Sistema;
-import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
-import jakarta.annotation.PostConstruct;
-import org.junit.jupiter.api.Test;
+import java.time.LocalDate;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.*;
-
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.net.URI;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import es.ujaen.dae.sistemadeincidenciasurbanas.SistemaDeIncidenciasUrbanasApplication;
+import es.ujaen.dae.sistemadeincidenciasurbanas.entidades.EstadoIncidencia;
+import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.DAutenticacionUsuario;
+import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.DIncidencia;
+import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.DTipoIncidencia;
+import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.DUsuario;
+import es.ujaen.dae.sistemadeincidenciasurbanas.rest.dto.Mapeador;
+import es.ujaen.dae.sistemadeincidenciasurbanas.servicios.Sistema;
+import es.ujaen.dae.sistemadeincidenciasurbanas.util.LocalizacionGPS;
+import jakarta.annotation.PostConstruct;
 
 
 @SpringBootTest(classes = SistemaDeIncidenciasUrbanasApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -323,4 +320,157 @@ public class TestControladorIncidencias {
 
     }
 
+    // Agregar estos tests a la clase TestControladorIncidencias existente
+
+    @Test
+    void testBorrarTipoSinAutenticacion() {
+        ResponseEntity<String> loginAdmin = restTemplate.postForEntity(
+            "/autenticacion",
+            new DAutenticacionUsuario("admin", "admin1234"),
+            String.class
+        );
+        String tokenAdmin = loginAdmin.getBody();
+    
+        DTipoIncidencia nuevoTipo = new DTipoIncidencia("TipoBorrar", "Descripción");
+        var peticionCrear = RequestEntity
+            .post("/tipos")
+            .headers(headerAutorizacion(tokenAdmin))
+            .body(nuevoTipo);
+        restTemplate.exchange(peticionCrear, Void.class);
+    
+        RequestEntity<Void> peticionBorrar = RequestEntity
+            .delete("/tipos/{nombreTipoIncidencia}", "TipoBorrar")
+            .build();
+    
+        ResponseEntity<Void> respuesta = restTemplate.exchange(peticionBorrar, Void.class);
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void testCrearIncidenciaSinAutenticacion() {
+        // Login admin y crear tipo
+        ResponseEntity<String> loginAdmin = restTemplate.postForEntity(
+            "/autenticacion",
+            new DAutenticacionUsuario("admin", "admin1234"),
+            String.class
+        );
+        String tokenAdmin = loginAdmin.getBody();
+    
+        DTipoIncidencia nuevoTipo = new DTipoIncidencia("Limpieza", "Basura");
+        var peticionTipo = RequestEntity
+            .post("/tipos")
+            .headers(headerAutorizacion(tokenAdmin))
+            .body(nuevoTipo);
+        restTemplate.exchange(peticionTipo, Void.class);
+    
+        // Intentar crear incidencia sin autenticación
+        DIncidencia nuevaIncidencia = new DIncidencia(
+            0,
+            null,
+            "Basura acumulada",
+            "Calle Principal",
+            new LocalizacionGPS(10, 10),
+            EstadoIncidencia.PENDIENTE,
+            "usuariotest",
+            "Limpieza",
+            null
+        );
+    
+        ResponseEntity<DIncidencia> respuesta = restTemplate.postForEntity(
+            "/creadas",
+            nuevaIncidencia,
+            DIncidencia.class
+        );
+    
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void testListarIncidenciasSinAutenticacion() {
+        RequestEntity<Void> peticion = RequestEntity
+            .get("/creadas")
+            .build();
+    
+        ResponseEntity<DIncidencia[]> respuesta = restTemplate.exchange(peticion, DIncidencia[].class);
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void testBorrarTipoQueNoExiste() {
+        ResponseEntity<String> loginAdmin = restTemplate.postForEntity(
+            "/autenticacion",
+            new DAutenticacionUsuario("admin", "admin1234"),
+            String.class
+        );
+        assertThat(loginAdmin.getStatusCode()).isEqualTo(HttpStatus.OK);
+    
+        String tokenAdmin = loginAdmin.getBody();
+    
+        RequestEntity<Void> peticionBorrar = RequestEntity
+            .delete("/tipos/{nombreTipoIncidencia}", "TipoInexistente")
+            .headers(headerAutorizacion(tokenAdmin))
+            .build();
+    
+        ResponseEntity<Void> respuesta = restTemplate.exchange(peticionBorrar, Void.class);
+    
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+        
+    @Test
+    void testUsuarioSoloPuedeVerSusPropiosDatos() {
+        // Crear dos usuarios
+        var usuario1 = new DUsuario("user1", "pass1", "user1@test.com", "User", "One",
+                                LocalDate.of(2000, 1, 1), "Dir1", "611111111");
+        var usuario2 = new DUsuario("user2", "pass2", "user2@test.com", "User", "Two",
+                                LocalDate.of(2000, 2, 2), "Dir2", "622222222");
+    
+        restTemplate.postForEntity("/usuarios", usuario1, Void.class);
+        restTemplate.postForEntity("/usuarios", usuario2, Void.class);
+    
+        // Usuario1 se autentica
+        ResponseEntity<String> login1 = restTemplate.postForEntity(
+            "/autenticacion",
+            new DAutenticacionUsuario("user1", "pass1"),
+            String.class
+        );
+        String token1 = login1.getBody();
+    
+        // Usuario1 intenta ver datos de Usuario2
+        var peticion = RequestEntity
+            .get("/usuarios/{login}", "user2")
+            .headers(headerAutorizacion(token1))
+            .build();
+    
+        ResponseEntity<DUsuario> respuesta = restTemplate.exchange(peticion, DUsuario.class);
+    
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void testAdminPuedeVerDatosDeOtrosUsuarios() {
+        // Crear usuario normal
+        var usuario = new DUsuario("normaluser", "pass", "normal@test.com", "Normal", "User",
+                               LocalDate.of(2000, 1, 1), "Dir", "611111111");
+        restTemplate.postForEntity("/usuarios", usuario, Void.class);
+    
+        // Admin se autentica
+        ResponseEntity<String> loginAdmin = restTemplate.postForEntity(
+            "/autenticacion",
+            new DAutenticacionUsuario("admin", "admin1234"),
+            String.class
+        );
+        String tokenAdmin = loginAdmin.getBody();
+    
+        // Admin obtiene datos del usuario normal
+         var peticion = RequestEntity
+            .get("/usuarios/{login}", "normaluser")
+            .headers(headerAutorizacion(tokenAdmin))
+            .build();
+    
+        ResponseEntity<DUsuario> respuesta = restTemplate.exchange(peticion, DUsuario.class);
+    
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(respuesta.getBody()).isNotNull();
+        assertThat(respuesta.getBody().login()).isEqualTo("normaluser");
+    }
 }
